@@ -73,14 +73,19 @@ export async function getDashboard({ actor, from, to, now = new Date() }) {
   return {
     range: { from: range.from, to: range.to },
     activeSubscriptions,
+    invoiced: moneyString(invoiced._sum.total ?? 0),
     invoicedAmount: moneyString(invoiced._sum.total ?? 0),
     invoicedInvoiceCount: invoiced._count._all,
+    collected: moneyString(collected._sum.amount ?? 0),
     collectedAmount: moneyString(collected._sum.amount ?? 0),
     collectedPaymentCount: collected._count._all,
+    outstanding: moneyString(outstanding._sum.balance ?? 0),
     outstandingBalance: moneyString(outstanding._sum.balance ?? 0),
     outstandingInvoiceCount: outstanding._count._all,
+    overdueCount: overdue._count._all,
     overdueBalance: moneyString(overdue._sum.balance ?? 0),
     overdueInvoiceCount: overdue._count._all,
+    currency: 'INR',
     invoiceCount,
     paidInvoiceCount,
     definitions: {
@@ -100,6 +105,7 @@ export async function getDueKanban({ actor, now = new Date() }) {
       const where = { AND: [scope, kanbanBucketWhere(bucket.key, today)] };
       const aggregate = await prisma.invoice.aggregate({ where, _sum: { balance: true }, _count: { _all: true } });
       return {
+        key: bucket.key,
         bucket: bucket.key,
         label: bucket.label,
         count: aggregate._count._all,

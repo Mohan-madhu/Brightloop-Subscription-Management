@@ -61,7 +61,8 @@ async function resumeStartFor(tx, subscriptionId) {
   if (pauseIndex < 0) return null;
   const resumeLog = logs.slice(0, pauseIndex).find((log) => log.status === 'ACTIVE');
   if (!resumeLog) return null;
-  return resumeLog.effectiveAt ?? resumeLog.createdAt;
+  const target = resumeLog.effectiveAt ?? resumeLog.createdAt;
+  return target instanceof Date ? dateOnlyFromTz(target) : target;
 }
 
 async function loadDiscountCandidates(tx, now) {
