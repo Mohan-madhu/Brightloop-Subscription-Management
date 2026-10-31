@@ -1,13 +1,64 @@
 import { Router } from 'express';
 import argon2 from 'argon2';
 import { z } from 'zod';
+import { validate as validateEmail } from 'deep-email-validator';
 import { prisma } from '../../db/prisma.js';
 import { AppError } from '../../middleware/errors.js';
 import { requireAuth, requireCsrf } from '../../middleware/auth.js';
+import { rateLimit } from '../../middleware/rate-limit.js';
 import { hashToken, newToken, sessionExpiry } from '../../utils/session.js';
 
 export const authRouter = Router();
 const loginSchema = z.object({ email: z.string().trim().email().max(320).transform((value) => value.toLowerCase()), password: z.string().min(1).max(1024) });
+const signupSchema = z.object({ email: z.string().trim().email().max(320).transform((value) => value.toLowerCase()), firstName: z.string().trim().min(1).max(100), lastName: z.string().trim().max(100).optional(), password: z.string().min(9).max(1024).regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9])/, 'Password must include uppercase, lowercase and special characters.') });
+const tokenSchema = z.object({ token: z.string().min(20).max(200) });
+
+async function advisoryEmailCheck(email) {
+  await Promise.race([validateEmail({ email, validateSMTP: false }), new Promise((resolve) => setTimeout(resolve, 2000))]);
+}
+async function createAuthToken(tx, userId, purpose) {
+  const raw = newToken(); const expiresAt = new Date(Date.now() + (purpose === 'ACTIVATION' ? 24 : 1) * 60 * 60 * 1000);
+  const token = await tx.authToken.create({ data: { userId, purpose, tokenHash: hashToken(raw), expiresAt } });
+  await tx.emailOutbox.create({ data: { to: (await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true } })).email, subject: purpose === 'ACTIVATION' ? 'Activate your Brightloop account' : 'Reset your Brightloop password', body: { type: purpose, token: raw, tokenId: token.id } } });
+  return token;
+}
+
+authRouter.post('/signup', rateLimit({ prefix: 'signup', limit: 5, windowMs: 15 * 60 * 1000 }), async (req, res) => {
+  const data = signupSchema.parse(req.body); void advisoryEmailCheck(data.email);
+  const customerRole = await prisma.role.findUnique({ where: { code: 'CUSTOMER' } });
+  if (!customerRole) throw new AppError(503, 'SERVICE_UNAVAILABLE', 'Account setup is not available.');
+  const existing = await prisma.user.findUnique({ where: { email: data.email } });
+  if (existing) throw new AppError(409, 'CONFLICT', 'An account already exists for this email.');
+  const passwordHash = await argon2.hash(data.password, { type: argon2.argon2id });
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({ data: { email: data.email, firstName: data.firstName, lastName: data.lastName, kind: 'CUSTOMER', credential: { create: { passwordHash } }, roles: { create: { roleId: customerRole.id } } } });
+    await createAuthToken(tx, user.id, 'ACTIVATION');
+  });
+  return res.status(201).json({ data: { accepted: true } });
+});
+
+authRouter.post('/activate', rateLimit({ prefix: 'activate', limit: 10, windowMs: 15 * 60 * 1000 }), async (req, res) => {
+  const { token } = tokenSchema.parse(req.body); const tokenHash = hashToken(token);
+  const record = await prisma.authToken.findUnique({ where: { tokenHash } });
+  if (!record || record.purpose !== 'ACTIVATION' || record.usedAt || record.expiresAt <= new Date()) throw new AppError(400, 'INVALID_TOKEN', 'Activation token is invalid or expired.');
+  await prisma.$transaction([prisma.user.update({ where: { id: record.userId }, data: { isActive: true } }), prisma.authToken.update({ where: { id: record.id }, data: { usedAt: new Date() } })]);
+  return res.json({ data: { activated: true } });
+});
+
+authRouter.post('/password-reset/request', rateLimit({ prefix: 'reset', limit: 5, windowMs: 15 * 60 * 1000 }), async (req, res) => {
+  const { email } = z.object({ email: z.string().trim().email().max(320).transform((value) => value.toLowerCase()) }).parse(req.body);
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user?.isActive) await prisma.$transaction((tx) => createAuthToken(tx, user.id, 'PASSWORD_RESET'));
+  return res.json({ data: { accepted: true } });
+});
+
+authRouter.post('/password-reset/confirm', rateLimit({ prefix: 'reset-confirm', limit: 10, windowMs: 15 * 60 * 1000 }), async (req, res) => {
+  const { token, password } = tokenSchema.extend({ password: signupSchema.shape.password }).parse(req.body); const record = await prisma.authToken.findUnique({ where: { tokenHash: hashToken(token) } });
+  if (!record || record.purpose !== 'PASSWORD_RESET' || record.usedAt || record.expiresAt <= new Date()) throw new AppError(400, 'INVALID_TOKEN', 'Reset token is invalid or expired.');
+  const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
+  await prisma.$transaction([prisma.authCredential.update({ where: { userId: record.userId }, data: { passwordHash } }), prisma.authToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }), prisma.session.updateMany({ where: { userId: record.userId, revokedAt: null }, data: { revokedAt: new Date() } })]);
+  return res.json({ data: { passwordReset: true } });
+});
 
 authRouter.post('/login', async (req, res) => {
   const { email, password } = loginSchema.parse(req.body);
