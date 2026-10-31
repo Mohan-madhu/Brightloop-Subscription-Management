@@ -13,6 +13,12 @@ Import `apiRequest`, `apiListRequest`, `ApiClientError`, and the `ApiSuccessResp
 
 Import `SessionProvider`, `useSession`, `apiSessionAdapter`, `SessionUser`, `SessionAdapter`, `SessionStatus`, and `SessionContextValue` from `apps/web/lib/session`. `apiSessionAdapter` maps `GET /auth/me` and `POST /auth/logout`; it treats 401 as unauthenticated and propagates other failures. The provider keeps session state in memory only and distinguishes loading, unauthenticated, and request-error states. Supply the adapter directly or provide an adapter that extends it when login response details such as email are needed.
 
+## UI polish tokens and shell usage
+
+Shared visual tokens live in `apps/web/app/globals.css` as `--bl-*` variables for page background, surfaces, text, borders and indigo brand states. Use the shared `Button`, `Input`, `Select`, `FormField`, `Table`, `Pagination`, `Badge`, `Dialog`, `LoadingState`, `EmptyState` and `ErrorState` components instead of page-local control styles.
+
+`AppShell` owns responsive navigation, route-aware active states, mobile drawer dismissal via Escape, breadcrumbs and the authenticated account footer. Navigation visibility is a presentation filter only; backend authorization remains authoritative.
+
 Example list usage:
 
 ```tsx

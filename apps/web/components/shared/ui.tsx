@@ -2,16 +2,16 @@
 
 import { cloneElement, useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactElement, type ReactNode, type SelectHTMLAttributes } from 'react';
 
-const controlClass = 'min-h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-100';
+const controlClass = 'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 shadow-sm focus:border-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-slate-100';
 
 export function Button({ className = '', variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'quiet' }) {
   const variants = {
-    primary: 'bg-indigo-700 text-white hover:bg-indigo-800',
-    secondary: 'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50',
-    danger: 'bg-red-700 text-white hover:bg-red-800',
+    primary: 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 active:bg-indigo-800',
+    secondary: 'border border-slate-300 bg-white text-slate-800 shadow-sm hover:bg-slate-50',
+    danger: 'bg-red-600 text-white shadow-sm hover:bg-red-700',
     quiet: 'text-slate-700 hover:bg-slate-100',
   };
-  return <button className={`inline-flex min-h-10 items-center justify-center rounded-md px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`} {...props} />;
+  return <button className={`inline-flex min-h-10 items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`} {...props} />;
 }
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
@@ -57,12 +57,12 @@ export function Table<Row>({ columns, rows, getRowKey, caption, emptyMessage = '
   caption: string;
   emptyMessage?: string;
 }) {
-  return <div className="w-full overflow-x-auto rounded-md border border-slate-200 bg-white">
+  return <div className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
     <table className="w-full border-collapse text-left text-sm">
       <caption className="sr-only">{caption}</caption>
-      <thead className="bg-slate-50 text-xs font-semibold uppercase text-slate-600"><tr>{columns.map((column) => <th key={column.key} scope="col" className={`px-4 py-3 ${column.className ?? ''}`}>{column.header}</th>)}</tr></thead>
+      <thead className="bg-slate-50 text-xs font-semibold text-slate-600"><tr>{columns.map((column) => <th key={column.key} scope="col" className={`px-4 py-3 ${column.className ?? ''}`}>{column.header}</th>)}</tr></thead>
       <tbody className="divide-y divide-slate-200">
-        {rows.length ? rows.map((row) => <tr key={getRowKey(row)} className="align-top">{columns.map((column) => <td key={column.key} className={`px-4 py-3 ${column.className ?? ''}`}>{column.render(row)}</td>)}</tr>) : <tr><td colSpan={Math.max(columns.length, 1)} className="px-4 py-8 text-center text-slate-600">{emptyMessage}</td></tr>}
+        {rows.length ? rows.map((row) => <tr key={getRowKey(row)} className="align-top hover:bg-slate-50">{columns.map((column) => <td key={column.key} className={`px-4 py-3 ${column.className ?? ''}`}>{column.render(row)}</td>)}</tr>) : <tr><td colSpan={Math.max(columns.length, 1)} className="px-4 py-8 text-center text-slate-600">{emptyMessage}</td></tr>}
       </tbody>
     </table>
   </div>;

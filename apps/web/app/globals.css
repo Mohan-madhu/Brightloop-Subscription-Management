@@ -1,5 +1,13 @@
 @import "tailwindcss";
-@theme { --color-ink: #172033; --color-indigo: #4f46e5; --color-mist: #f5f7fb; }
+@theme { --color-ink: #0f172a; --color-indigo: #4f46e5; --color-mist: #f8fafc; }
+:root {
+  --bl-page: #f8fafc; --bl-surface: #ffffff; --bl-subtle: #f1f5f9; --bl-hover: #f8fafc;
+  --bl-text: #0f172a; --bl-secondary: #475569; --bl-muted: #64748b; --bl-border: #e2e8f0; --bl-strong-border: #cbd5e1;
+  --bl-brand: #4f46e5; --bl-brand-hover: #4338ca; --bl-brand-pressed: #3730a3; --bl-brand-subtle: #eef2ff;
+}
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--color-mist); color: var(--color-ink); font-family: Arial, Helvetica, sans-serif; }
-button:focus-visible, a:focus-visible { outline: 3px solid #818cf8; outline-offset: 3px; }
+body { margin: 0; background: var(--bl-page); color: var(--bl-text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #6366f1; outline-offset: 2px; }
+button, a, input, select, textarea { transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, opacity 160ms ease; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+@media print { nav, aside, header, button, [data-no-print] { display: none !important; } body { background: white; } main { padding: 0 !important; } }
