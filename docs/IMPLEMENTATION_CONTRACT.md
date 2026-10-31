@@ -31,12 +31,12 @@ All list routes accept `page`, `pageSize`, `search`, `sortBy`, and `sortOrder`; 
 | PLANNED | `POST/PATCH /catalog/products/:id/variants/:variantId?` | Admin | `{sku?,priceAdjustment,attributes[]}` |
 | PLANNED | `GET/POST/PATCH /catalog/plans` | authenticated/Admin write | plan and `products[]` with `isAddon`/price |
 | PLANNED | `GET/POST/PATCH /catalog/taxes`, `/catalog/discounts` | authenticated/Admin write | configuration only |
-| PLANNED | `GET /customers`, `GET /customers/:id` | Admin/Finance; Marketing assigned; Customer self | customer fields |
-| PLANNED | `POST /customers/:id/assignments` | Admin | `{userId}` |
+| IMPLEMENTED | `GET /customers`, `GET /customers/:id` | Admin/Finance; Marketing assigned; Customer self | customer fields |
+| IMPLEMENTED | `POST /customers/:id/assignments` | Admin | `{userId}` |
 | PLANNED | `GET/POST/PATCH /quotation-templates` | authenticated/Admin write | template lines and terms |
-| PLANNED | `GET/POST/PATCH /quotations` | Admin or assigned Marketing | quotation line records; totals await Vijay calculator |
-| PLANNED | `POST /quotations/:id/accept` | Admin or assigned Marketing | transactionally creates linked subscription |
-| PLANNED | `GET /subscriptions`, `GET /subscriptions/:id`, `POST /subscriptions/:id/actions` | Admin/Finance, assigned Marketing, self Customer | explicit lifecycle action |
+| IMPLEMENTED | `POST/GET /quotations/:id` | Admin or assigned Marketing | quotation line records; totals await Vijay calculator |
+| IMPLEMENTED | `POST /quotations/:id/accept` | Admin or assigned Marketing | transactionally creates linked subscription |
+| IMPLEMENTED | `GET /subscriptions/:id`, `POST /subscriptions/:id/actions` | Admin/Finance, assigned Marketing, self Customer | explicit lifecycle action |
 
 ## Financial and date rules
 

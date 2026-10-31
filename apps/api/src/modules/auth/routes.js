@@ -31,7 +31,7 @@ authRouter.post('/signup', rateLimit({ prefix: 'signup', limit: 5, windowMs: 15 
   if (existing) throw new AppError(409, 'CONFLICT', 'An account already exists for this email.');
   const passwordHash = await argon2.hash(data.password, { type: argon2.argon2id });
   await prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({ data: { email: data.email, firstName: data.firstName, lastName: data.lastName, kind: 'CUSTOMER', credential: { create: { passwordHash } }, roles: { create: { roleId: customerRole.id } } } });
+    const user = await tx.user.create({ data: { email: data.email, firstName: data.firstName, lastName: data.lastName, kind: 'CUSTOMER', credential: { create: { passwordHash } }, roles: { create: { roleId: customerRole.id } }, customer: { create: { legalName: [data.firstName, data.lastName].filter(Boolean).join(' '), billingEmail: data.email } } } });
     await createAuthToken(tx, user.id, 'ACTIVATION');
   });
   return res.status(201).json({ data: { accepted: true } });
