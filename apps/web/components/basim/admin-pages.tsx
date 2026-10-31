@@ -31,7 +31,7 @@ function errorText(cause: unknown): string {
 }
 
 function PageTitle({ title, description }: { title: string; description: string }) {
-  return <header className="mb-7"><p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-violet-700">Brightloop · Administration</p><h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{title}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{description}</p></header>;
+  return <header className="mb-7"><p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">Brightloop · Administration</p><h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{title}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{description}</p></header>;
 }
 
 export function AdminCatalogPage({ section }: { section: Exclude<Section, 'staff'> }) {

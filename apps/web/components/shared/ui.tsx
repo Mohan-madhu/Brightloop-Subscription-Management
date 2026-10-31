@@ -2,14 +2,14 @@
 
 import { cloneElement, useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactElement, type ReactNode, type SelectHTMLAttributes } from 'react';
 
-const controlClass = 'min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] placeholder:text-slate-400 transition focus:border-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600 disabled:cursor-not-allowed disabled:bg-slate-100';
+const controlClass = 'min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/[0.02] placeholder:text-slate-400 transition focus:border-emerald-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-100';
 
 export function Button({ className = '', variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'quiet' }) {
   const variants = {
-    primary: 'bg-violet-600 text-white shadow-sm hover:bg-violet-700',
-    secondary: 'border border-slate-200 bg-white text-slate-800 shadow-sm hover:border-violet-200 hover:bg-violet-50',
+    primary: 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-700',
+    secondary: 'border border-slate-200 bg-white text-slate-800 shadow-sm hover:border-emerald-200 hover:bg-emerald-50',
     danger: 'bg-red-700 text-white hover:bg-red-800',
-    quiet: 'text-slate-700 hover:bg-violet-50 hover:text-violet-800',
+    quiet: 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-800',
   };
   return <button className={`inline-flex min-h-10 items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`} {...props} />;
 }
@@ -62,7 +62,7 @@ export function Table<Row>({ columns, rows, getRowKey, caption, emptyMessage = '
       <caption className="sr-only">{caption}</caption>
       <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500"><tr>{columns.map((column) => <th key={column.key} scope="col" className={`px-4 py-3.5 ${column.className ?? ''}`}>{column.header}</th>)}</tr></thead>
       <tbody className="divide-y divide-slate-100">
-        {rows.length ? rows.map((row) => <tr key={getRowKey(row)} className="align-top transition-colors hover:bg-violet-50/40">{columns.map((column) => <td key={column.key} className={`px-4 py-3.5 ${column.className ?? ''}`}>{column.render(row)}</td>)}</tr>) : <tr><td colSpan={Math.max(columns.length, 1)} className="px-4 py-10 text-center text-slate-600">{emptyMessage}</td></tr>}
+        {rows.length ? rows.map((row) => <tr key={getRowKey(row)} className="align-top transition-colors hover:bg-emerald-50/40">{columns.map((column) => <td key={column.key} className={`px-4 py-3.5 ${column.className ?? ''}`}>{column.render(row)}</td>)}</tr>) : <tr><td colSpan={Math.max(columns.length, 1)} className="px-4 py-10 text-center text-slate-600">{emptyMessage}</td></tr>}
       </tbody>
     </table>
   </div>;
@@ -93,7 +93,7 @@ const badgeVariants = {
   success: 'bg-emerald-100 text-emerald-800',
   warning: 'bg-amber-100 text-amber-900',
   danger: 'bg-red-100 text-red-800',
-  info: 'bg-violet-100 text-violet-800',
+  info: 'bg-emerald-100 text-emerald-800',
 };
 
 export function Badge({ children, tone = 'neutral' }: { children: ReactNode; tone?: keyof typeof badgeVariants }) {
