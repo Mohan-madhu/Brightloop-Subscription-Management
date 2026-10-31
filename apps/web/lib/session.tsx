@@ -5,11 +5,11 @@ import { ApiClientError, apiRequest } from './api';
 
 export type SessionUser = {
   id: string;
-  userId: string;
-  kind: 'STAFF' | 'CUSTOMER';
+  userId?: string;
+  kind?: 'STAFF' | 'CUSTOMER';
   roles: readonly string[];
-  customerId: string | null;
-  email?: string;
+  customerId?: string | null;
+  email: string;
   firstName?: string;
   lastName?: string | null;
 };
@@ -36,6 +36,7 @@ export const apiSessionAdapter: SessionAdapter = {
         kind: session.kind,
         roles: session.roles,
         customerId: session.customerId,
+        email: '',
       };
     } catch (cause) {
       if (cause instanceof ApiClientError && cause.status === 401) return null;
