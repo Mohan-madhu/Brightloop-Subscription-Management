@@ -1,40 +1,32 @@
 # Basim Frontend Handoff
 
-## Branch and Commits
+## Integration Status
 
-- Branch: `Basim/frontend` (the existing branch name; left unchanged).
-- Shared exports: `a7079f1 feat(web): publish shared frontend primitives`.
-- No auth, Admin, or Marketing feature routes were added because their endpoint contracts are absent.
+The API client and session adapter were aligned to the integrated auth contract. The local branch was not merged with `origin/main` or `origin/integration/mvp`: those refs track `apps/api/.env`, and this frontend-only pass avoided importing environment credentials or unrelated owner changes. Normal integration remains pending.
 
-## Routes
+Shared exports remain in `apps/web/components/shared/ui.tsx`, `apps/web/components/shared/app-shell.tsx`, `apps/web/lib/api.ts`, and `apps/web/lib/session.tsx`; usage is documented in `docs/FRONTEND_SHARED.md`. No Finance/Customer feature files or backend/schema files were changed.
 
-- `/` remains the Phase 0 foundation screen.
-- Signup, activation, login, logout, forgot/reset password routes: blocked pending Mohan's auth/session contract.
-- Admin staff, catalog, plans, tax, and discount routes: blocked pending the corresponding API contract.
-- Marketing assigned-customer, quotation, and subscription routes: blocked pending the corresponding API contract.
-- Finance and Customer routes remain Najid's ownership and were not edited.
+## PASS
 
-## Shared Exports
+- `npm run typecheck -w @brightloop/web`: passed after the interface fixes.
+- Isolated API-client behavior test passed for `bl_csrf` cookie decoding, `X-CSRF-Token` forwarding on POST, `credentials: include`, standard `{data}` unwrapping, and 401 `ApiClientError` mapping. The test used mocked fetch and made no API requests.
+- Session adapter uses the actual `GET /api/v1/auth/me` payload (`userId`, `kind`, `roles`, `customerId`), maps 401 to unauthenticated, and calls `POST /api/v1/auth/logout`; logout receives the CSRF header from the readable cookie.
 
-- UI: `Button`, `Input`, `Select`, `FormField`, `Table`, `TableColumn`, `Pagination`, `Badge`, `Dialog`, `LoadingState`, `EmptyState`, and `ErrorState` from `apps/web/components/shared/ui`.
-- Shell: `AppShell` and `AppNavigationItem` from `apps/web/components/shared/app-shell`.
-- API: `apiRequest`, `apiListRequest`, `ApiClientError`, and request/response types from `apps/web/lib/api`.
-- Session: `SessionProvider`, `useSession`, `SessionUser`, and adapter/context types from `apps/web/lib/session`.
-- Usage and coordination notes: `docs/FRONTEND_SHARED.md`.
+## FAIL
 
-The API client includes cookies, disables caching, returns the standard `data` payload, and supports caller-supplied CSRF token/header values without choosing the backend convention. The session provider requires `getSession` and `logout` adapters. It stores session state in memory and distinguishes loading, unauthenticated, and error states. The shell's role-filtered navigation is presentation only.
+- `npm run lint -w @brightloop/web`: ESLint cannot load `es-abstract/2024/AddEntriesFromIterable` from the installed `eslint-plugin-react` dependency tree.
+- `npm run build -w @brightloop/web`: Tailwind compilation fails because the installed `lightningcss` package lacks `lightningcss.darwin-arm64.node`. Next.js also warns it selected `/Users/basimm/package-lock.json` as workspace root due to multiple lockfiles.
 
-## Verified
+## NOT RUN
 
-- `npm run typecheck -w @brightloop/web`: passed after shared exports were added.
-- No auth form, API failure-state, responsive browser, or end-to-end business flow was tested; those feature routes do not exist yet.
-- `npm run lint -w @brightloop/web`: blocked by the installed dependency tree failing to resolve `es-abstract/2024/AddEntriesFromIterable` while loading `eslint-plugin-react`.
-- `npm run build -w @brightloop/web`: blocked because the installed `lightningcss` package is missing `lightningcss.darwin-arm64.node`. Next.js also warned it selected `/Users/basimm/package-lock.json` as the workspace root because multiple lockfiles are present.
+- Browser desktop/mobile smoke test and real auth/API integration: not run. The current feature branch has no auth, Admin, or Marketing page routes, and no explicitly provisioned disposable demo fixture was provided. No signup email, account mutation, invoice generation, billing job, or payment was triggered.
+- Admin setup through updated dashboard and duplicate-billing demonstration: not run; requires integrated frontend routes, a safe demo database/fixture, and the other owners' backend changes.
 
-## Contract Request to Mohan
+## Cross-Owner Interface Blockers
 
-`docs/IMPLEMENTATION_CONTRACT.md` is not present. The checked-in `docs/openapi.yaml` and mounted Express routers define only health and public company/billing-interval lookups. Please add and commit the planned endpoint contracts before these pages are implemented.
+- **Variant API status/path:** `docs/IMPLEMENTATION_CONTRACT.md` marks variant writes planned as `POST/PATCH /catalog/products/:id/variants/:variantId?`; `docs/HANDOFF_MOHAN.md` says variant reads/writes are implemented; the integrated `apps/api/src/modules/catalog/routes.js` currently exposes only `POST /api/v1/catalog/products/:id/variants` and no variant PATCH or GET-by-product route. Mohan should reconcile the contract/handoff and publish the supported read/update operations before an Admin variant editor is wired.
+- **Catalog list pagination:** the contract says all list routes accept pagination, but `GET /api/v1/catalog/plans`, `/taxes`, and Admin `/discounts` in `apps/api/src/modules/catalog/routes.js` return plain arrays without pagination. Align those endpoints or explicitly document them as bounded, non-paginated lists before list screens depend on `apiListRequest`.
+- **Pending assigned scope:** staff creation/role assignment and quotation-template endpoints are explicitly pending in the implementation contract and Mohan handoff. Auth/Admin/Marketing pages are not present in this checkout, so no UI success is claimed.
+- **Integration secret:** `apps/api/.env` is tracked on the integrated refs. Remove it from version control and rotate any committed credentials before merging or opening a branch that inherits that history.
 
-The auth contract needs signup/availability behavior, activation, login/logout/session retrieval, password reset, cookie attributes, CSRF token retrieval/header semantics, validation error details, and role payload shape. Admin contracts need staff/role assignment and CRUD/list/filter/sort/archive semantics for products, attributes, variants, plans, intervals, add-ons, tax, and discounts. Marketing contracts need assigned-customer list/detail/history, quotation-template selection, quotation create/update/status/conversion, and subscription detail/history/lifecycle actions. Include exact paths, methods, request/response schemas, pagination, status codes, and field-level validation errors.
-
-No endpoint URLs, payload shapes, client-side totals, or success states have been invented. The existing lockfile modification was left untouched. No API/server/schema or Finance/Customer files were changed.
+No endpoint paths, request schemas, client-side money totals, or success placeholders were invented. The pre-existing `package-lock.json` modification was not staged or changed.

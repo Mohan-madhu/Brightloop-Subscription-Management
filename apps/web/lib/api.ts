@@ -30,20 +30,36 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null;
 }
 
+function readCsrfCookie(): string | null {
+	if (typeof document === 'undefined') return null;
+	const cookie = document.cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith('bl_csrf='));
+	if (!cookie) return null;
+	try {
+		return decodeURIComponent(cookie.slice('bl_csrf='.length));
+	} catch {
+		return null;
+	}
+}
+
 async function requestEnvelope<T>(path: string, options: ApiRequestOptions = {}): Promise<ApiSuccessResponse<T> & { pagination?: ApiPagination }> {
-	const headers = new Headers(options.headers);
+	const { body: requestBody, csrf, ...requestOptions } = options;
+	const headers = new Headers(requestOptions.headers);
 	let body: BodyInit | undefined;
 
-	if (options.body !== undefined) {
-		body = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
+	if (requestBody !== undefined) {
+		body = typeof requestBody === 'string' ? requestBody : JSON.stringify(requestBody);
 		if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
 	}
-	if (options.csrf) headers.set(options.csrf.headerName, options.csrf.token);
+	const method = (requestOptions.method ?? 'GET').toUpperCase();
+	if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+		const csrfToken = csrf?.token ?? readCsrfCookie();
+		if (csrfToken) headers.set(csrf?.headerName ?? 'X-CSRF-Token', csrfToken);
+	}
 
 	let response: Response;
 	try {
 		response = await fetch(`${apiBase}${path}`, {
-			...options,
+			...requestOptions,
 			body,
 			cache: 'no-store',
 			credentials: 'include',

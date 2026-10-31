@@ -1,12 +1,48 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { ApiClientError, apiRequest } from './api';
 
-export type SessionUser = { id: string; email: string; roles: readonly string[] };
+export type SessionUser = {
+  userId: string;
+  kind: 'STAFF' | 'CUSTOMER';
+  roles: readonly string[];
+  customerId: string | null;
+  email?: string;
+  firstName?: string;
+  lastName?: string | null;
+};
 export type SessionStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 export type SessionAdapter = {
   getSession: () => Promise<SessionUser | null>;
   logout: () => Promise<void>;
+};
+
+type AuthSessionResponse = {
+  userId: string;
+  kind: 'STAFF' | 'CUSTOMER';
+  roles: string[];
+  customerId: string | null;
+};
+
+export const apiSessionAdapter: SessionAdapter = {
+  async getSession() {
+    try {
+      const session = await apiRequest<AuthSessionResponse>('/auth/me');
+      return {
+        userId: session.userId,
+        kind: session.kind,
+        roles: session.roles,
+        customerId: session.customerId,
+      };
+    } catch (cause) {
+      if (cause instanceof ApiClientError && cause.status === 401) return null;
+      throw cause;
+    }
+  },
+  async logout() {
+    await apiRequest<{ loggedOut: boolean }>('/auth/logout', { method: 'POST' });
+  },
 };
 export type SessionContextValue = {
   status: SessionStatus;

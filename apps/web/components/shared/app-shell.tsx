@@ -28,7 +28,7 @@ export function AppShell({ children, navigation, user, brand = 'Brightloop', onL
         {visibleNavigation.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className="block min-h-10 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">{item.label}</Link>)}
       </nav>
       {user && <div className="border-t border-slate-200 p-4">
-        <p className="truncate text-sm font-medium">{user.email}</p>
+        <p className="truncate text-sm font-medium">{user.email ?? user.roles.join(', ')}</p>
         {onLogout && <button type="button" className="mt-3 min-h-10 text-sm text-indigo-800 underline" onClick={() => void onLogout()}>Sign out</button>}
       </div>}
     </aside>
