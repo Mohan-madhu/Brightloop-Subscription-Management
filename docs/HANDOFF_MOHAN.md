@@ -31,3 +31,16 @@ NOT RUN: an authenticated browser success path requires a deliberately provision
 ## Remaining scope and blockers
 
 Quotation-template and staff-management endpoints are still pending. Invoice/billing/payment/report code is not implemented here. The known global tax/discount and variant-foreign-key schema gaps remain unresolved and must be approved before those capabilities are added. Sales routes do not automatically select taxes or discounts until their applicability target semantics are approved.
+
+## October 31, 2026 integration pass
+
+- PASS: `main` deployed to the VPS; web and API PM2 processes are online.
+- PASS: VPS readiness, public company lookup and billing-interval lookup return HTTP 200.
+- PASS: unauthenticated login returns 401; protected customer, invoice and staff routes return 401.
+- PASS: unsigned Razorpay webhook request is rejected with HTTP 400.
+- PASS: `SHOW_ERROR_DETAILS=false` is configured on the VPS.
+- PASS: web typecheck and production compilation; ESLint now runs through the workspace-safe TypeScript parser (two existing unused-variable warnings remain).
+- NOT RUN: live signup activation email and password-reset email, because no disposable production fixture address was authorized.
+- NOT RUN: billing-twice duplicate-invoice check and Razorpay order/payment capture, because these mutate live financial data and require an isolated demo fixture/provider callback.
+
+The current schema/API has no approved WhatsApp, IVR, SMS or push-notification provider contract, credentials, or persistence model. Vijay's alternate reminder backend was not merged; its UI must remain unconnected until those interfaces are approved.
