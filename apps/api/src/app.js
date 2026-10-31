@@ -25,9 +25,10 @@ app.disable('x-powered-by');
 app.use(pinoHttp({ logger }));
 app.use(helmet());
 const allowedWebOrigins = new Set([env.WEB_ORIGIN, ...env.WEB_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)]);
+const localDevelopmentOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedWebOrigins.has(origin)) return callback(null, true);
+    if (!origin || allowedWebOrigins.has(origin) || (env.NODE_ENV !== 'production' && localDevelopmentOrigin.test(origin))) return callback(null, true);
     return callback(null, false);
   },
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
