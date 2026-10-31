@@ -21,8 +21,10 @@ async function guardedTick(name, work, logger) {
 }
 
 export async function startScheduler({ logger = console } = {}) {
-  if (env.JOBS_ENABLED !== 'true') {
-    logger.info?.('JOBS_ENABLED is false; billing, email and quarterly report jobs are not scheduled.');
+  const billingJobsEnabled = env.JOBS_ENABLED === 'true';
+  const emailJobsEnabled = env.EMAIL_DELIVERY_ENABLED === 'true';
+  if (!billingJobsEnabled && !emailJobsEnabled) {
+    logger.info?.('JOBS_ENABLED and EMAIL_DELIVERY_ENABLED are false; scheduled jobs are not scheduled.');
     return { started: false, reason: 'JOBS_ENABLED_FALSE' };
   }
   if (started) return { started: true, alreadyRunning: true };
@@ -35,26 +37,14 @@ export async function startScheduler({ logger = console } = {}) {
     logger.error?.({ err: error }, 'Could not recover stale email outbox rows; scheduled work will continue.');
   }
 
-  timers.push(
-    setInterval(
-      () => guardedTick('billing', () => runDueBilling(), logger),
-      intervalFromEnv('BILLING_JOB_INTERVAL_MS', 15 * 60 * 1000)
-    )
-  );
-  timers.push(
-    setInterval(
-      () => guardedTick('email', () => processEmailOutbox({ logger }), logger),
-      intervalFromEnv('EMAIL_JOB_INTERVAL_MS', 60 * 1000)
-    )
-  );
-  timers.push(
-    setInterval(
-      () => guardedTick('quarterly-reports', () => runDueQuarterlyReports(), logger),
-      intervalFromEnv('QUARTERLY_JOB_INTERVAL_MS', 24 * 60 * 60 * 1000)
-    )
-  );
+  if (billingJobsEnabled) {
+    timers.push(setInterval(() => guardedTick('billing', () => runDueBilling(), logger), intervalFromEnv('BILLING_JOB_INTERVAL_MS', 15 * 60 * 1000)));
+    timers.push(setInterval(() => guardedTick('quarterly-reports', () => runDueQuarterlyReports(), logger), intervalFromEnv('QUARTERLY_JOB_INTERVAL_MS', 24 * 60 * 60 * 1000)));
+  }
+  if (emailJobsEnabled) timers.push(setInterval(() => guardedTick('email', () => processEmailOutbox({ logger }), logger), intervalFromEnv('EMAIL_JOB_INTERVAL_MS', 60 * 1000)));
 
-  return { started: true, timers: timers.length };
+  logger.info?.({ billingJobsEnabled, emailJobsEnabled, timers: timers.length }, 'Scheduler started.');
+  return { started: true, timers: timers.length, billingJobsEnabled, emailJobsEnabled };
 }
 
 export function stopScheduler() {
