@@ -10,15 +10,15 @@ Core schema names are `User`, `AuthCredential`, `Role`, `UserRole`, `AuthToken`,
 
 `src/db/prisma.js` exports the singleton `prisma`. `src/middleware/validate.js` exports `parsePagination`; `src/middleware/errors.js` exports `AppError`. `src/middleware/auth.js` exports `requireAuth`, `requireRole`, and `requireCustomerAccess`. Auth routers register in `src/app.js`.
 
-Vijay exports `calculateQuotationTotals(input)` from `src/services/calculations.js` when implemented. Until then quotation writes return `CALCULATION_UNAVAILABLE` rather than calculate totals independently. Vijay owns subscription-to-billing consumption: use persisted `Subscription`, `SubscriptionLine`, `BillingPeriod`, and status logs; a subscription is billable only when `status=ACTIVE`.
+`src/services/calculations.js` exports `calculateQuotationTotals(input)` and `selectBestDiscount(candidates, context)`. They are pure shared functions: decimal-string inputs/outputs, half-up two-decimal rounding, discount before tax, and stable-ID discount tie-breaking. Vijay owns invoice use of the result and subscription-to-billing consumption: use persisted `Subscription`, `SubscriptionLine`, `BillingPeriod`, and status logs; a subscription is billable only when `status=ACTIVE`.
 
 The existing `EmailOutbox` is the transactional email interface: auth stores `{ type, token }` in `body` in the same transaction as a token row. Vijay’s delivery worker is the only sender.
 
 ## Auth and access
 
-**PLANNED:** `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, and `GET /api/v1/auth/me` will use opaque random values stored hashed server-side and returned only as an HttpOnly `bl_session` cookie. Cookie settings are `SameSite=Lax`, `Secure` in production, and `Path=/`. Mutations require the allowed `WEB_ORIGIN`; cookie-auth mutations also require `X-CSRF-Token` matching the non-HttpOnly `bl_csrf` cookie. The existing bearer-token implementation will be replaced as part of the session migration.
+**IMPLEMENTED:** `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, and `GET /api/v1/auth/me` use opaque random values stored hashed server-side and returned only as an HttpOnly `bl_session` cookie. Cookie settings are `SameSite=Lax`, `Secure` in production, and `Path=/`. Mutations require the allowed `WEB_ORIGIN`; cookie-auth mutations also require `X-CSRF-Token` matching the non-HttpOnly `bl_csrf` cookie.
 
-**PLANNED:** `POST /auth/signup`, `POST /auth/activate`, `POST /auth/password-reset/request`, `POST /auth/password-reset/confirm`, and Admin-only `POST /staff`. Signup accepts `{email,firstName,lastName?,password}`; password is 9+ characters including upper, lower and special. Public payloads never contain roles. Reset request returns `{data:{accepted:true}}` whether an account exists. Errors are `VALIDATION_ERROR`, `AUTHENTICATION_REQUIRED`, `FORBIDDEN`, `INVALID_CREDENTIALS`, `CONFLICT`, and `RATE_LIMITED`.
+**IMPLEMENTED:** `POST /auth/signup`, `POST /auth/activate`, `POST /auth/password-reset/request`, and `POST /auth/password-reset/confirm`. Admin-only staff creation remains planned. Signup accepts `{email,firstName,lastName?,password}`; password is 9+ characters including upper, lower and special. Public payloads never contain roles. Reset request returns `{data:{accepted:true}}` whether an account exists. Errors are `VALIDATION_ERROR`, `AUTHENTICATION_REQUIRED`, `FORBIDDEN`, `INVALID_CREDENTIALS`, `CONFLICT`, and `RATE_LIMITED`.
 
 ## HTTP routes
 
@@ -26,15 +26,15 @@ All list routes accept `page`, `pageSize`, `search`, `sortBy`, and `sortOrder`; 
 
 | Status | Route | Role/access | Request/result |
 |---|---|---|---|
-| PLANNED | `GET /catalog/products` | authenticated | paginated products; Marketing/Customer read only |
-| PLANNED | `POST/PATCH /catalog/products/:id?` | Admin | product fields, decimal prices as strings |
+| IMPLEMENTED | `GET /catalog/products` | authenticated | paginated products; Marketing/Customer read only |
+| IMPLEMENTED | `POST/PATCH /catalog/products/:id?` | Admin | product fields, decimal prices as strings |
 | PLANNED | `POST/PATCH /catalog/products/:id/variants/:variantId?` | Admin | `{sku?,priceAdjustment,attributes[]}` |
-| PLANNED | `GET/POST/PATCH /catalog/plans` | authenticated/Admin write | plan and `products[]` with `isAddon`/price |
+| IMPLEMENTED | `GET/POST/PATCH /catalog/plans` | authenticated/Admin write | plan and `products[]` with `isAddon`/price |
 | IMPLEMENTED | `GET/POST/PATCH /catalog/taxes`, `/catalog/discounts` | authenticated/Admin write | configuration only; targets limited to schema-supported product/variant/plan |
 | IMPLEMENTED | `GET /customers`, `GET /customers/:id` | Admin/Finance; Marketing assigned; Customer self | customer fields |
 | IMPLEMENTED | `POST /customers/:id/assignments` | Admin | `{userId}` |
 | PLANNED | `GET/POST/PATCH /quotation-templates` | authenticated/Admin write | template lines and terms |
-| IMPLEMENTED | `POST/GET /quotations/:id` | Admin or assigned Marketing | quotation line records; totals await Vijay calculator |
+| IMPLEMENTED | `POST/GET /quotations/:id` | Admin or assigned Marketing | quotation line records; no total is exposed until Vijay's calculator contract exists |
 | IMPLEMENTED | `POST /quotations/:id/accept` | Admin or assigned Marketing | transactionally creates linked subscription |
 | IMPLEMENTED | `GET /subscriptions/:id`, `POST /subscriptions/:id/actions` | Admin/Finance, assigned Marketing, self Customer | explicit lifecycle action |
 
