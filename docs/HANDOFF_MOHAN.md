@@ -16,11 +16,17 @@ See `IMPLEMENTATION_CONTRACT.md` for paths, roles, request fields, and shared in
 
 `DATABASE_URL`, `WEB_ORIGIN`, and `AUTH_TOKEN_SECRET` are required for the API. Local jobs and email delivery remain disabled. Auth creates `EmailOutbox` records but no delivery worker is implemented here; Vijay owns transport.
 
+## Final integration verification
+
+PASS: sales acceptance now returns the existing linked subscription on a repeat request and lifecycle close transitions to `CLOSED` instead of the previously incorrect pause state. PASS: invalid lifecycle sources return `INVALID_TRANSITION`. NOT RUN: complete Admin-to-payment dashboard demo, because Vijay's invoice/payment/router and Basim/Najid frontend modules are not present in this integrated checkout.
+
 ## Verification
 
-Passed: Prisma validate/generate, migration deployment/status, repeatable baseline seed, live readiness/public lookup checks, and Node syntax checks for auth/catalog/customer/sales modules.
+PASS: Prisma validate/generate, migration deployment/status, repeatable baseline seed, live readiness/public lookup checks, Node syntax checks for auth/catalog/customer/sales modules, frontend TypeScript check, and production compilation/static-page generation.
 
-Unverified: an authenticated browser success path requires a deliberately provisioned Admin account; no default-password account was created. Isolated destructive test DB checks for duplicate email, cross-customer ownership, invalid transitions and repeated acceptance are not available in this checkout and were not run against the shared database.
+FAIL: ESLint cannot load `es-abstract/2024/AddEntriesFromIterable` from the current local `eslint-plugin-react` dependency tree; this is an existing package-install/configuration issue, not an application lint result. `next build` completes compilation and static generation but reports the same lint-plugin failure.
+
+NOT RUN: an authenticated browser success path requires a deliberately provisioned Admin account; no default-password account was created. Isolated destructive test DB checks for duplicate email, cross-customer ownership, invalid transitions and repeated acceptance are not available in this checkout and were not run against the shared database.
 
 ## Remaining scope and blockers
 
