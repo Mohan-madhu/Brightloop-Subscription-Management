@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { ApiClientError, apiRequest } from './api';
 
 export type SessionUser = {
+  id: string;
   userId: string;
   kind: 'STAFF' | 'CUSTOMER';
   roles: readonly string[];
@@ -30,6 +31,7 @@ export const apiSessionAdapter: SessionAdapter = {
     try {
       const session = await apiRequest<AuthSessionResponse>('/auth/me');
       return {
+        id: session.userId,
         userId: session.userId,
         kind: session.kind,
         roles: session.roles,
