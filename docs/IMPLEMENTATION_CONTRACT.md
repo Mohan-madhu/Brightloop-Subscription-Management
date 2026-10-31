@@ -6,7 +6,7 @@ This document is the integration contract for the initial backend modules. Expre
 
 Authenticated endpoints use `Authorization: Bearer <access-token>`. The access token carries only a user ID; Express resolves active roles and record access for every request. Admin has full access, Marketing has only assigned customers, Finance has financial access, and Customer has only its own customer record. Public requests cannot set staff roles.
 
-Planned routes are `POST /auth/login`, `POST /auth/activate`, `POST /auth/password-reset/request`, `POST /auth/password-reset/confirm`, and `GET /auth/me`. Admin-only staff creation is `POST /staff`. Activation and reset flows consume one hashed, expiring token. The exact login/session transport is an implementation decision that must be finalized before frontend authentication work starts.
+Implemented routes are `POST /auth/login` and `GET /auth/me`. Login returns a signed eight-hour bearer access token; it never returns credentials. Activation, reset and Admin-only staff creation remain pending. Activation and reset flows will consume one hashed, expiring token.
 
 ## Catalog configuration
 

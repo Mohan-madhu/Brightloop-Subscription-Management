@@ -6,6 +6,7 @@ import pinoHttp from 'pino-http';
 import { env } from './config/env.js';
 import { healthRouter } from './modules/health/routes.js';
 import { publicRouter } from './modules/public/routes.js';
+import { authRouter } from './modules/auth/routes.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
 export const app = express();
@@ -17,5 +18,6 @@ app.use(cors({ origin: env.WEB_ORIGIN, methods: ['GET', 'POST', 'PATCH', 'DELETE
 app.use(express.json({ limit: '100kb' }));
 app.use('/api/v1/health', healthRouter);
 app.use('/api/v1/public', publicRouter);
+app.use('/api/v1/auth', authRouter);
 app.use(notFound);
 app.use(errorHandler);
