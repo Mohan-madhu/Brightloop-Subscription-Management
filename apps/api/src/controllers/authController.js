@@ -4,6 +4,7 @@ import prisma from '../config/db.js';
 import { config } from '../config/env.js';
 import { validatePassword, hashPassword, comparePassword } from '../utils/password.js';
 import { sendActivationEmail, sendPasswordResetEmail } from '../services/emailService.js';
+import { findAuthUserByEmail } from '../services/authUser.js';
 
 export async function register(req, res, next) {
   try {
@@ -110,9 +111,7 @@ export async function login(req, res, next) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
-    });
+    const user = await findAuthUserByEmail(normalizedEmail);
 
     if (!user) {
       return res.status(401).json({
@@ -121,7 +120,7 @@ export async function login(req, res, next) {
       });
     }
 
-    const match = await comparePassword(password, user.passwordHash);
+    const match = user.passwordHash ? await comparePassword(password, user.passwordHash) : false;
     if (!match) {
       return res.status(401).json({
         success: false,

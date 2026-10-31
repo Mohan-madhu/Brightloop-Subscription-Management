@@ -23,13 +23,13 @@ export default function HomePage() {
 
   const handleSubscribe = async (planId: string) => {
     if (!user) {
-      router.push(`/register?plan=${planId}`);
+      router.push(`/odoo/register?plan=${planId}`);
       return;
     }
     setSubscribingId(planId);
     try {
       await api.subscriptions.create({ planId });
-      router.push('/customer/subscriptions');
+      router.push('/odoo/customer/subscriptions');
     } catch (err: any) {
       alert(err.message || 'Failed to subscribe to plan');
     } finally {
@@ -56,14 +56,14 @@ export default function HomePage() {
         </p>
         <div className="flex flex-wrap gap-3 pt-1">
           <Link
-            href="/register"
+            href="/odoo/register"
             className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl shadow-md shadow-violet-600/20 transition-all flex items-center space-x-2"
           >
             <span>Start Free Trial</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            href="/login"
+            href="/odoo/login"
             className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-all"
           >
             Sign In to Portal

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env.js';
-import prisma from '../config/db.js';
+import { findAuthUserById } from '../services/authUser.js';
 
 /**
  * Verifies JWT Bearer token and loads authenticated user.
@@ -23,9 +23,7 @@ export async function authenticate(req, res, next) {
     }
 
     const decoded = jwt.verify(token, config.jwtSecret);
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
+    const user = await findAuthUserById(decoded.userId);
 
     if (!user) {
       return res.status(401).json({

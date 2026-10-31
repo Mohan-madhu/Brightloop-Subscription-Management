@@ -30,7 +30,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         <div className="w-10 h-10 rounded-2xl bg-violet-600 flex items-center justify-center text-white font-black text-2xl shadow-md shadow-violet-600/20">
           b
         </div>
-        <Link href="/" className="font-extrabold text-xl tracking-tight text-slate-950">
+        <Link href="/odoo/" className="font-extrabold text-xl tracking-tight text-slate-950">
           brightloop
         </Link>
         <span className="hidden sm:inline text-[10px] uppercase tracking-[0.18em] bg-violet-50 text-violet-700 px-2.5 py-1 rounded-full font-bold ml-2">
@@ -75,13 +75,13 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         ) : (
           <div className="flex items-center space-x-2">
             <Link
-              href="/login"
+              href="/odoo/login"
               className="px-3.5 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
             >
               Sign In
             </Link>
             <Link
-              href="/register"
+              href="/odoo/register"
               className="px-4 py-2.5 text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-xl transition-colors shadow-sm shadow-violet-600/20"
             >
               Get Started

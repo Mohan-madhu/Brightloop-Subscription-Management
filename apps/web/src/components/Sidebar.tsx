@@ -35,7 +35,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
             Overview
           </div>
           <Link
-            href="/dashboard"
+            href="/odoo/dashboard"
             onClick={onNavigate}
             className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               isActive('/dashboard') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -54,7 +54,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
             </div>
             <div className="space-y-1">
               <Link
-                href="/admin/products"
+                href="/odoo/admin/products"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/admin/products') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -64,7 +64,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
                 <span>Products & Variants</span>
               </Link>
               <Link
-                href="/admin/plans"
+                href="/odoo/admin/plans"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/admin/plans') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -74,7 +74,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
                 <span>Subscription Plans</span>
               </Link>
               <Link
-                href="/admin/staff"
+                href="/odoo/admin/staff"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/admin/staff') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -95,7 +95,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
             </div>
             <div className="space-y-1">
               <Link
-                href="/finance/invoices"
+                href="/odoo/finance/invoices"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/finance/invoices') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -105,7 +105,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
                 <span>Invoices & Billing</span>
               </Link>
               <Link
-                href="/finance/kanban"
+                href="/odoo/finance/kanban"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/finance/kanban') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -115,7 +115,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
                 <span>Due-Date Kanban</span>
               </Link>
               <Link
-                href="/finance/reports"
+                href="/odoo/finance/reports"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/finance/reports') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -136,7 +136,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
             </div>
             <div className="space-y-1">
               <Link
-                href="/marketing/quotations"
+                href="/odoo/marketing/quotations"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/marketing/quotations') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -157,7 +157,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
             </div>
             <div className="space-y-1">
               <Link
-                href="/customer/subscriptions"
+                href="/odoo/customer/subscriptions"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/customer/subscriptions') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -167,7 +167,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
                 <span>My Subscriptions</span>
               </Link>
               <Link
-                href="/customer/invoices"
+                href="/odoo/customer/invoices"
                 onClick={onNavigate}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/customer/invoices') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'
@@ -186,7 +186,7 @@ export function Sidebar({ open = false, onNavigate }: { open?: boolean; onNaviga
             Offline Capabilities
           </div>
           <Link
-            href="/offline-drafts"
+            href="/odoo/offline-drafts"
             onClick={onNavigate}
             className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               isActive('/offline-drafts') ? 'bg-violet-50 text-violet-800' : 'hover:bg-slate-50 text-slate-600'

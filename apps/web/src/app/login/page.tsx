@@ -23,7 +23,7 @@ export default function LoginPage() {
     try {
       const res = await api.auth.login({ email, password });
       login(res.token, res.user);
-      router.push('/dashboard');
+      router.push('/odoo/dashboard');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check credentials.');
     } finally {
@@ -143,7 +143,7 @@ export default function LoginPage() {
 
         <div className="text-center text-xs text-slate-500">
           Don't have an account?{' '}
-          <Link href="/register" className="text-violet-700 font-semibold hover:underline">
+          <Link href="/odoo/register" className="text-violet-700 font-semibold hover:underline">
             Register here
           </Link>
         </div>

@@ -41,7 +41,7 @@ export default function RegisterPage() {
       const res = await api.auth.register({ email, name, phone, password });
       setSuccess('Account created successfully! Redirecting...');
       login(res.token, res.user);
-      setTimeout(() => router.push('/dashboard'), 1500);
+      setTimeout(() => router.push('/odoo/dashboard'), 1500);
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -170,7 +170,7 @@ export default function RegisterPage() {
 
         <div className="text-center text-xs text-slate-500">
           Already registered?{' '}
-          <Link href="/login" className="text-violet-700 font-semibold hover:underline">
+          <Link href="/odoo/login" className="text-violet-700 font-semibold hover:underline">
             Sign In
           </Link>
         </div>

@@ -47,7 +47,7 @@ function ActivateContent() {
           <p className="text-slate-600 text-sm">{message}</p>
           <div className="pt-4">
             <Link
-              href="/login"
+              href="/odoo/login"
               className="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm inline-block"
             >
               Proceed to Login
@@ -63,7 +63,7 @@ function ActivateContent() {
           <p className="text-slate-600 text-sm">{message}</p>
           <div className="pt-4">
             <Link
-              href="/login"
+              href="/odoo/login"
               className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm inline-block"
             >
               Return to Login
