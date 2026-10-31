@@ -151,10 +151,12 @@ export function serializeReportRun(run) {
     id: run.id,
     reportType: run.reportType,
     periodKey: run.periodKey,
+    period: run.periodKey,
     status: run.status,
     startedAt: run.startedAt?.toISOString() ?? null,
     completedAt: run.completedAt?.toISOString() ?? null,
     createdAt: run.createdAt?.toISOString() ?? null,
+    downloadAvailable: run.status === 'COMPLETED',
     metadata: run.metadata ?? null
   };
 }
