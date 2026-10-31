@@ -7,7 +7,7 @@ import type { SessionUser } from '../../lib/session';
 
 export type AppNavigationItem = { label: string; href: string; roles?: readonly string[] };
 
-function NavigationIcon({ href }: { href: string }) {
+export function NavigationIcon({ href }: { href: string }) {
   const section = href.split('/').filter(Boolean).at(-1) ?? 'overview';
   const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" {...common}>
