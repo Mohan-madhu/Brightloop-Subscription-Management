@@ -1,7 +1,30 @@
 {
   "name": "@brightloop/web",
   "private": true,
-  "scripts": { "dev": "next dev", "build": "next build", "start": "next start", "lint": "eslint .", "typecheck": "tsc --noEmit" },
-  "dependencies": { "@tailwindcss/postcss": "^4.1.7", "next": "^15.3.2", "react": "^19.1.0", "react-dom": "^19.1.0", "tailwindcss": "^4.1.7" },
-  "devDependencies": { "@eslint/eslintrc": "^3.3.1", "@types/node": "^22.15.19", "@types/react": "^19.1.6", "@types/react-dom": "^19.1.5", "eslint": "^9.27.0", "eslint-config-next": "^15.3.2", "typescript": "^5.8.3" }
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "next": "^15.3.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.7"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^22.15.19",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "^15.3.2",
+    "typescript": "^5.8.3"
+  },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "^1.32.0"
+  }
 }
