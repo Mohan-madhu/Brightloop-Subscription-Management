@@ -48,6 +48,22 @@ salesRouter.post('/quotations', requireAuth, requireCsrf, async (req, res) => {
   res.status(201).json({ data });
 });
 salesRouter.get('/quotations/:id', requireAuth, async (req, res) => res.json({ data: await quoteForRequest(req) }));
+salesRouter.post('/quotations/:id/status', requireAuth, requireCsrf, async (req, res) => {
+  const id = z.string().cuid().parse(req.params.id);
+  const { action, note } = z.object({ action: z.enum(['SEND', 'REJECT', 'EXPIRE']), note: z.string().trim().max(500).optional() }).parse(req.body);
+  const result = await prisma.$transaction(async (tx) => {
+    const quotation = await tx.quotation.findUnique({ where: { id }, select: { id: true, customerId: true, status: true } });
+    if (!quotation) throw new AppError(404, 'NOT_FOUND', 'Quotation not found.');
+    if (!(await canAccessCustomer(req.auth, quotation.customerId, tx))) throw new AppError(403, 'FORBIDDEN', 'You do not have access to this quotation.');
+    const transitions = { SEND: { from: ['DRAFT'], to: 'SENT' }, REJECT: { from: ['DRAFT', 'SENT'], to: 'REJECTED' }, EXPIRE: { from: ['DRAFT', 'SENT'], to: 'EXPIRED' } };
+    const transition = transitions[action];
+    if (!transition.from.includes(quotation.status)) throw new AppError(409, 'INVALID_TRANSITION', 'Quotation status transition is not allowed.');
+    const updated = await tx.quotation.update({ where: { id }, data: { status: transition.to, version: { increment: 1 } } });
+    await tx.quotationStatusLog.create({ data: { quotationId: id, status: transition.to, note: note ?? action } });
+    return updated;
+  });
+  res.json({ data: result });
+});
 salesRouter.post('/quotations/:id/accept', requireAuth, requireCsrf, async (req, res) => {
   const input = acceptanceInput.parse(req.body);
   const data = await prisma.$transaction(async (tx) => {
@@ -84,6 +100,31 @@ salesRouter.get('/subscriptions', requireAuth, async (req, res) => {
   ]);
   res.json({ data, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
 });
+
+salesRouter.post('/subscriptions/:id/add-ons', requireAuth, requireCsrf, async (req, res) => {
+  const id = z.string().cuid().parse(req.params.id);
+  const input = z.object({ productId: z.string().cuid(), variantId: z.string().cuid().nullable().optional(), quantity: z.number().int().positive(), enabled: z.boolean() }).parse(req.body);
+  const data = await prisma.$transaction(async (tx) => {
+    const subscription = await tx.subscription.findUnique({ where: { id }, include: { plan: true } });
+    if (!subscription) throw new AppError(404, 'NOT_FOUND', 'Subscription not found.');
+    if (!(await canAccessCustomer(req.auth, subscription.customerId, tx))) throw new AppError(403, 'FORBIDDEN', 'You do not have access to this subscription.');
+    if (!['CONFIRMED', 'ACTIVE', 'PAUSED'].includes(subscription.status)) throw new AppError(409, 'INVALID_TRANSITION', 'Add-ons can only be changed on a confirmed, active or paused subscription.');
+    const planProduct = await tx.planProduct.findFirst({ where: { planId: subscription.planId, productId: input.productId, variantId: input.variantId ?? null, isAddon: true }, include: { product: true, variant: true } });
+    if (!planProduct) throw new AppError(400, 'VALIDATION_ERROR', 'The selected product/variant is not an add-on for this plan.');
+    const existing = await tx.subscriptionLine.findFirst({ where: { subscriptionId: id, productId: input.productId, variantId: input.variantId ?? null, isAddon: true } });
+    if (!input.enabled) {
+      if (existing) await tx.subscriptionLine.delete({ where: { id: existing.id } });
+    } else if (existing) {
+      await tx.subscriptionLine.update({ where: { id: existing.id }, data: { quantity: input.quantity, agreedPrice: planProduct.price } });
+    } else {
+      await tx.subscriptionLine.create({ data: { subscriptionId: id, productId: input.productId, variantId: input.variantId ?? null, description: `${planProduct.product.name}${planProduct.variant ? ` (${planProduct.variant.sku ?? 'variant'})` : ''}`, quantity: input.quantity, agreedPrice: planProduct.price, isAddon: true } });
+    }
+    await tx.subscriptionStatusLog.create({ data: { subscriptionId: id, status: subscription.status, note: `${input.enabled ? 'ADD_ON_ENABLED' : 'ADD_ON_DISABLED'}:${input.productId}`, effectiveAt: new Date() } });
+    return tx.subscription.findUniqueOrThrow({ where: { id }, include: { lines: true } });
+  });
+  res.json({ data });
+});
+
 salesRouter.post('/subscriptions/:id/actions', requireAuth, requireCsrf, async (req, res) => {
   const id = z.string().cuid().parse(req.params.id); const { action } = z.object({ action: z.enum(['ACTIVATE', 'PAUSE', 'RESUME', 'RENEW', 'CLOSE']) }).parse(req.body);
   const subscription = await prisma.subscription.findUnique({ where: { id }, include: { plan: { include: { billingInterval: true } } } });
