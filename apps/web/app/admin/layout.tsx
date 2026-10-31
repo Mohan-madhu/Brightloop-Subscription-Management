@@ -8,6 +8,7 @@ const navigation = [
   { label: 'Plans', href: '/admin/plans', roles: ['ADMIN'] },
   { label: 'Tax rules', href: '/admin/taxes', roles: ['ADMIN'] },
   { label: 'Discounts', href: '/admin/discounts', roles: ['ADMIN'] },
+  { label: 'Offline drafts', href: '/offline-drafts', roles: ['ADMIN'] },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

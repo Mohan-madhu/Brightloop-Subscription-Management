@@ -13,11 +13,13 @@ const financeNavigation: readonly AppNavigationItem[] = [
   { label: 'Payments', href: '/finance/payments' },
   { label: 'Due-date board', href: '/finance/kanban' },
   { label: 'Quarterly reports', href: '/finance/reports' },
+  { label: 'Offline drafts', href: '/offline-drafts' },
 ];
 const customerNavigation: readonly AppNavigationItem[] = [
   { label: 'Your account', href: '/portal' },
   { label: 'Subscriptions', href: '/portal/subscriptions' },
   { label: 'Invoices and payments', href: '/portal/invoices' },
+  { label: 'Offline drafts', href: '/offline-drafts' },
 ];
 
 export function NajidSessionArea({ area, children }: { area: 'finance' | 'customer'; children: ReactNode }) {
