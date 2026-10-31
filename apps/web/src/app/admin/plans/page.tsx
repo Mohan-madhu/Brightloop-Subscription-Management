@@ -132,7 +132,7 @@ export default function AdminPlansPage() {
               }
               setShowPlanModal(true);
             }}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>Create Plan</span>
@@ -152,7 +152,7 @@ export default function AdminPlansPage() {
         <h2 className="text-lg font-bold text-slate-900">Configured Plans</h2>
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -299,7 +299,7 @@ export default function AdminPlansPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-violet-600 text-white rounded-xl text-xs font-semibold"
                 >
                   Save Plan
                 </button>
@@ -343,7 +343,7 @@ export default function AdminPlansPage() {
                   id="taxDefault"
                   checked={taxForm.isDefault}
                   onChange={(e) => setTaxForm({ ...taxForm, isDefault: e.target.checked })}
-                  className="rounded text-emerald-600 focus:ring-emerald-500"
+                  className="rounded text-emerald-600 focus:ring-violet-500"
                 />
                 <label htmlFor="taxDefault" className="text-xs text-slate-700 font-medium">Set as default e-service tax</label>
               </div>
@@ -357,7 +357,7 @@ export default function AdminPlansPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-violet-600 text-white rounded-xl text-xs font-semibold"
                 >
                   Save Tax
                 </button>
@@ -417,7 +417,7 @@ export default function AdminPlansPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-violet-600 text-white rounded-xl text-xs font-semibold"
                 >
                   Save Discount
                 </button>

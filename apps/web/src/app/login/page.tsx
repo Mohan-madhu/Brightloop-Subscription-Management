@@ -37,8 +37,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-12">
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-6">
+    <div className="max-w-5xl mx-auto py-6 sm:py-12">
+      <div className="grid overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-900/5 md:grid-cols-[0.85fr_1fr]">
+        <aside className="relative hidden overflow-hidden bg-slate-950 p-10 text-white md:flex md:flex-col md:justify-between">
+          <div className="absolute -right-24 -top-20 h-64 w-64 rounded-full bg-violet-600/40 blur-3xl" />
+          <div className="relative"><div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500 text-2xl font-black">b</div><p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-300">Brightloop workspace</p><h2 className="mt-4 text-3xl font-bold leading-tight">Billing clarity starts here.</h2><p className="mt-4 text-sm leading-6 text-slate-300">Sign in to manage subscriptions, review invoices and stay on top of your account.</p></div>
+          <div className="relative rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">Your access is protected by your assigned workspace role.</div>
+        </aside>
+        <div className="p-6 sm:p-10 space-y-6">
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold text-slate-900">Sign in to Brightloop</h1>
           <p className="text-sm text-slate-500">Enter your credentials to access your account</p>
@@ -62,7 +68,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="user@brightloop.local"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -76,14 +82,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-2"
+            className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-2"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -137,10 +143,11 @@ export default function LoginPage() {
 
         <div className="text-center text-xs text-slate-500">
           Don't have an account?{' '}
-          <Link href="/register" className="text-emerald-600 font-semibold hover:underline">
+          <Link href="/register" className="text-violet-700 font-semibold hover:underline">
             Register here
           </Link>
         </div>
+      </div>
       </div>
     </div>
   );

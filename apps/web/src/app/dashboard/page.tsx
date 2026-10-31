@@ -55,7 +55,7 @@ export default function DashboardPage() {
     return (
       <div className="text-center py-16 space-y-4">
         <h2 className="text-xl font-bold text-slate-800">Please sign in to view your dashboard</h2>
-        <Link href="/login" className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl inline-block text-sm font-semibold">
+        <Link href="/login" className="px-5 py-2.5 bg-violet-600 text-white rounded-xl inline-block text-sm font-semibold">
           Sign In
         </Link>
       </div>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
             <button
               onClick={handleTriggerBilling}
               disabled={billingRunning}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-2"
+              className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-2"
             >
               {billingRunning ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -109,7 +109,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : metrics ? (
             <>

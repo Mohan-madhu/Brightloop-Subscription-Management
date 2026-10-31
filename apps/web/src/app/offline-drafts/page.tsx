@@ -157,7 +157,7 @@ export default function OfflineDraftsPage() {
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>Draft Offline Quote</span>
@@ -315,7 +315,7 @@ export default function OfflineDraftsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-violet-600 text-white rounded-xl text-xs font-semibold"
                 >
                   Save to Local Storage
                 </button>

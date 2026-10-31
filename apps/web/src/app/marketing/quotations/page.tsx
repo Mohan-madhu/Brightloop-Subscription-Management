@@ -105,7 +105,7 @@ export default function QuotationsPage() {
         {(user?.role === 'MARKETING' || user?.role === 'ADMIN') && (
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>New Quotation</span>
@@ -125,7 +125,7 @@ export default function QuotationsPage() {
         <h2 className="text-lg font-bold text-slate-900">Commercial Proposals</h2>
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : quotations.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
@@ -268,7 +268,7 @@ export default function QuotationsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-violet-600 text-white rounded-xl text-xs font-semibold"
                 >
                   Issue Quotation
                 </button>

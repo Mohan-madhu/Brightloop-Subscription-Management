@@ -200,7 +200,7 @@ export default function ReminderTriggerModal({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+91 98765 43210"
-                className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 font-mono"
+                className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-violet-500 font-mono"
               />
               <p className="text-[10px] text-slate-400">Target for Outbound IVR call, WhatsApp alert & SMS</p>
             </div>
@@ -215,7 +215,7 @@ export default function ReminderTriggerModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="customer@domain.com"
-                className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-violet-500"
               />
               <p className="text-[10px] text-slate-400">Target for realtime SMTP email reminder</p>
             </div>
@@ -232,14 +232,14 @@ export default function ReminderTriggerModal({
                 onClick={() => toggleChannel('IVR')}
                 className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center space-x-2.5 ${
                   selectedChannels.includes('IVR')
-                    ? 'border-emerald-600 bg-emerald-50/60 shadow-sm'
+                    ? 'border-violet-600 bg-violet-50/60 shadow-sm'
                     : 'border-slate-200 hover:border-slate-300 bg-slate-50 opacity-60'
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold flex-shrink-0 ${
                     selectedChannels.includes('IVR')
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-violet-600 text-white'
                       : 'bg-slate-200 text-slate-500'
                   }`}
                 >
@@ -256,14 +256,14 @@ export default function ReminderTriggerModal({
                 onClick={() => toggleChannel('WHATSAPP')}
                 className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center space-x-2.5 ${
                   selectedChannels.includes('WHATSAPP')
-                    ? 'border-emerald-600 bg-emerald-50/60 shadow-sm'
+                    ? 'border-violet-600 bg-violet-50/60 shadow-sm'
                     : 'border-slate-200 hover:border-slate-300 bg-slate-50 opacity-60'
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold flex-shrink-0 ${
                     selectedChannels.includes('WHATSAPP')
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-violet-600 text-white'
                       : 'bg-slate-200 text-slate-500'
                   }`}
                 >
@@ -280,14 +280,14 @@ export default function ReminderTriggerModal({
                 onClick={() => toggleChannel('SMS')}
                 className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center space-x-2.5 ${
                   selectedChannels.includes('SMS')
-                    ? 'border-emerald-600 bg-emerald-50/60 shadow-sm'
+                    ? 'border-violet-600 bg-violet-50/60 shadow-sm'
                     : 'border-slate-200 hover:border-slate-300 bg-slate-50 opacity-60'
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold flex-shrink-0 ${
                     selectedChannels.includes('SMS')
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-violet-600 text-white'
                       : 'bg-slate-200 text-slate-500'
                   }`}
                 >
@@ -304,14 +304,14 @@ export default function ReminderTriggerModal({
                 onClick={() => toggleChannel('EMAIL')}
                 className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center space-x-2.5 ${
                   selectedChannels.includes('EMAIL')
-                    ? 'border-emerald-600 bg-emerald-50/60 shadow-sm'
+                    ? 'border-violet-600 bg-violet-50/60 shadow-sm'
                     : 'border-slate-200 hover:border-slate-300 bg-slate-50 opacity-60'
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold flex-shrink-0 ${
                     selectedChannels.includes('EMAIL')
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-violet-600 text-white'
                       : 'bg-slate-200 text-slate-500'
                   }`}
                 >
@@ -331,7 +331,7 @@ export default function ReminderTriggerModal({
               onClick={() => setActiveTab('PREVIEW')}
               className={`pb-2 text-xs font-bold border-b-2 transition-colors ${
                 activeTab === 'PREVIEW'
-                  ? 'border-emerald-600 text-emerald-700'
+                  ? 'border-violet-600 text-violet-700'
                   : 'border-transparent text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -341,7 +341,7 @@ export default function ReminderTriggerModal({
               onClick={() => setActiveTab('DISPATCH')}
               className={`pb-2 text-xs font-bold border-b-2 transition-colors flex items-center space-x-1.5 ${
                 activeTab === 'DISPATCH'
-                  ? 'border-emerald-600 text-emerald-700'
+                  ? 'border-violet-600 text-violet-700'
                   : 'border-transparent text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -645,7 +645,7 @@ export default function ReminderTriggerModal({
               type="button"
               disabled={loading || selectedChannels.length === 0}
               onClick={handleExecuteTrigger}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-2 disabled:opacity-50"
+              className="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-2 disabled:opacity-50"
             >
               {loading ? (
                 <>

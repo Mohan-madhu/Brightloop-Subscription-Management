@@ -38,36 +38,50 @@ export default function HomePage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-16 py-8">
+    <div className="max-w-7xl mx-auto space-y-16 py-4 sm:py-8">
       {/* Hero Section */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center space-x-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-xs font-semibold text-emerald-800">
-          <Zap className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Automated Recurring Billing Engine</span>
+      <section className="relative overflow-hidden rounded-[2rem] border border-violet-100 bg-white px-6 py-10 shadow-sm sm:px-10 lg:px-14 lg:py-16">
+        <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-violet-100/70 blur-3xl" />
+        <div className="relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-6">
+        <div className="inline-flex items-center space-x-2 bg-violet-50 border border-violet-200 px-3 py-1 rounded-full text-xs font-semibold text-violet-800">
+          <Zap className="w-3.5 h-3.5 text-violet-600" />
+          <span>Subscription billing, in one workspace</span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-          Next-Generation Subscription <br />
-          <span className="text-emerald-600">Lifecycle & Financial Platform</span>
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-950 leading-[1.08]">
+          Make recurring revenue feel <span className="text-violet-600">effortless.</span>
         </h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Manage products, configurable variants, quotations, recurring invoices with tax-exclusive 18% GST snapshots, and Razorpay test checkout.
+        <p className="text-lg text-slate-600 max-w-xl leading-8">
+          Manage plans, subscriptions, invoices and payments from one clear workspace built for your team and your customers.
         </p>
-        <div className="flex justify-center space-x-4 pt-4">
+        <div className="flex flex-wrap gap-3 pt-1">
           <Link
             href="/register"
-            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-md transition-all flex items-center space-x-2"
+            className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl shadow-md shadow-violet-600/20 transition-all flex items-center space-x-2"
           >
             <span>Start Free Trial</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/login"
-            className="px-6 py-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-all shadow-sm"
+            className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-all"
           >
             Sign In to Portal
           </Link>
         </div>
-      </div>
+        <p className="text-xs text-slate-400">Clear billing records · Role-based workspace · Customer self-service</p>
+        </div>
+        <div className="relative rounded-3xl border border-violet-100 bg-[#f8f7ff] p-5 sm:p-7">
+          <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-semibold text-slate-500">A clearer way to manage billing</p><p className="mt-1 text-xl font-bold text-slate-900">One connected workspace</p></div><div className="rounded-2xl bg-white p-3 text-violet-600 shadow-sm"><BarChart2 className="h-5 w-5" /></div></div>
+          <div className="mt-6 space-y-3">
+            {[['Plans & products', 'Configure your catalog'], ['Invoices & payments', 'Track every billing event'], ['Customer portal', 'Give customers control']].map(([title, detail], index) => (
+              <div key={title} className="flex items-center gap-3 rounded-2xl border border-white bg-white/90 p-4 shadow-sm"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-sm font-bold text-violet-700">0{index + 1}</div><div><p className="text-sm font-semibold text-slate-900">{title}</p><p className="mt-0.5 text-xs text-slate-500">{detail}</p></div><Check className="ml-auto h-4 w-4 text-violet-500" /></div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-white/70 px-4 py-3 text-xs text-slate-500"><ShieldCheck className="h-4 w-4 text-violet-600" /> Access follows your workspace role</div>
+        </div>
+        </div>
+      </section>
 
       {/* Subscription Plans Section */}
       <div className="space-y-6">
@@ -82,10 +96,10 @@ export default function HomePage() {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : plans.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
+          <div className="text-center py-8 text-slate-500 bg-white rounded-2xl border border-slate-200">
             No active plans found. Please seed the database or create plans in the Admin console.
           </div>
         ) : (
@@ -93,7 +107,7 @@ export default function HomePage() {
             {plans.map((p) => (
               <div
                 key={p.id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex flex-col justify-between"
               >
                 <div className="space-y-4">
                   <div className="flex justify-between items-start">
@@ -128,10 +142,10 @@ export default function HomePage() {
                   <button
                     onClick={() => handleSubscribe(p.id)}
                     disabled={subscribingId === p.id}
-                    className="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-sm rounded-xl transition-colors border border-emerald-200 flex items-center justify-center space-x-1.5"
+                    className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-1.5 disabled:opacity-60"
                   >
                     {subscribingId === p.id ? (
-                      <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
                     ) : (
                       <span>Subscribe Now</span>
                     )}

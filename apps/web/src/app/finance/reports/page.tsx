@@ -74,7 +74,7 @@ export default function ReportsPage() {
           <button
             type="submit"
             disabled={generating}
-            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm transition-colors"
+            className="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-lg shadow-sm transition-colors"
           >
             {generating ? 'Generating...' : 'Generate Report'}
           </button>
@@ -104,7 +104,7 @@ export default function ReportsPage() {
         <h2 className="text-lg font-bold text-slate-900">Generated Quarterly Reports Archive</h2>
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : reports.length === 0 ? (
           <div className="text-center py-8 text-slate-500 text-xs">

@@ -78,7 +78,7 @@ export default function CustomerSubscriptionsPage() {
         </div>
         <button
           onClick={() => setShowSubscribeModal(true)}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
+          className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
         >
           <Plus className="w-4 h-4" />
           <span>Subscribe to New Plan</span>
@@ -101,7 +101,7 @@ export default function CustomerSubscriptionsPage() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : subscriptions.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-4">
@@ -112,7 +112,7 @@ export default function CustomerSubscriptionsPage() {
           </p>
           <button
             onClick={() => setShowSubscribeModal(true)}
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors inline-flex items-center space-x-2"
+            className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors inline-flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
             <span>Browse & Subscribe to a Plan</span>
@@ -218,7 +218,7 @@ export default function CustomerSubscriptionsPage() {
                   <button
                     onClick={() => handleSubscribe(p.id)}
                     disabled={subscribing === p.id}
-                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center justify-center space-x-1"
+                    className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center justify-center space-x-1"
                   >
                     {subscribing === p.id ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
