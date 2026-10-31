@@ -11,6 +11,49 @@ const productInput = z.object({ name: z.string().trim().min(1).max(160), type: z
 const planInput = z.object({ name: z.string().trim().min(1).max(160), billingIntervalId: z.string().cuid(), price: money, minimumQuantity: z.number().int().positive(), availableFrom: z.string().date().nullable().optional(), availableUntil: z.string().date().nullable().optional(), allowEarlyClosure: z.boolean(), allowPause: z.boolean(), allowRenewal: z.boolean(), allowEndDateClosure: z.boolean(), active: z.boolean().optional(), products: z.array(z.object({ productId: z.string().cuid(), variantId: z.string().cuid().nullable().optional(), isAddon: z.boolean(), price: money })).min(1) });
 const taxInput = z.object({ name: z.string().trim().min(1).max(160), rate: z.string().regex(/^\d+(\.\d{1,2})?$/), taxExclusive: z.boolean(), active: z.boolean().optional() });
 const discountInput = z.object({ code: z.string().trim().min(1).max(80).transform((value) => value.toUpperCase()), kind: z.enum(['FIXED', 'PERCENTAGE']), amount: money, minimumPurchase: money.nullable().optional(), minimumQuantity: z.number().int().positive().nullable().optional(), startsAt: z.string().datetime().nullable().optional(), endsAt: z.string().datetime().nullable().optional(), usageLimit: z.number().int().positive().nullable().optional(), active: z.boolean().optional(), targets: z.array(z.object({ productId: z.string().cuid().nullable().optional(), variantId: z.string().cuid().nullable().optional(), planId: z.string().cuid().nullable().optional() })).optional() });
+const intervalInput = z.object({ code: z.string().trim().min(1).max(40).regex(/^[A-Z0-9_]+$/), name: z.string().trim().min(1).max(100), unit: z.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']), count: z.number().int().positive(), active: z.boolean().optional() });
+const templateInput = z.object({ name: z.string().trim().min(1).max(160), validityDays: z.number().int().positive().max(3650), terms: z.string().trim().max(8000).nullable().optional(), active: z.boolean().optional(), lines: z.array(z.object({ productId: z.string().cuid(), variantId: z.string().cuid().nullable().optional(), quantity: z.number().int().positive(), unitPrice: money })).min(1) });
+
+catalogRouter.get('/billing-intervals', requireAuth, requireRole('ADMIN'), async (req, res) => {
+  const { page, pageSize, skip, orderBy } = parsePagination(req.query, { allowedSort: ['name', 'code', 'createdAt'] });
+  const where = typeof req.query.search === 'string' && req.query.search.trim() ? { OR: [{ name: { contains: req.query.search.trim(), mode: 'insensitive' } }, { code: { contains: req.query.search.trim(), mode: 'insensitive' } }] } : {};
+  const [data, total] = await prisma.$transaction([
+    prisma.billingInterval.findMany({ where, skip, take: pageSize, orderBy: orderBy ?? { name: 'asc' } }),
+    prisma.billingInterval.count({ where })
+  ]);
+  res.json({ data, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
+});
+catalogRouter.post('/billing-intervals', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => res.status(201).json({ data: await prisma.billingInterval.create({ data: intervalInput.parse(req.body) }) }));
+catalogRouter.patch('/billing-intervals/:id', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => {
+  try { res.json({ data: await prisma.billingInterval.update({ where: { id: z.string().cuid().parse(req.params.id) }, data: intervalInput.partial().parse(req.body) }) }); }
+  catch { throw new AppError(404, 'NOT_FOUND', 'Billing interval not found.'); }
+});
+
+catalogRouter.get('/quotation-templates', requireAuth, async (req, res) => {
+  const { page, pageSize, skip, orderBy } = parsePagination(req.query, { allowedSort: ['name', 'createdAt'] });
+  const where = { ...(req.auth.roles.includes('ADMIN') || req.auth.roles.includes('FINANCE') || req.auth.roles.includes('MARKETING') ? {} : { active: true }) };
+  const [data, total] = await prisma.$transaction([
+    prisma.quotationTemplate.findMany({ where, skip, take: pageSize, orderBy: orderBy ?? { name: 'asc' }, include: { lines: { include: { product: true } } } }),
+    prisma.quotationTemplate.count({ where })
+  ]);
+  res.json({ data, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
+});
+catalogRouter.post('/quotation-templates', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => {
+  const input = templateInput.parse(req.body); const { lines, ...template } = input;
+  const data = await prisma.quotationTemplate.create({ data: { ...template, lines: { create: lines.map((line) => ({ ...line, variantId: line.variantId ?? null })) } }, include: { lines: true } });
+  res.status(201).json({ data });
+});
+catalogRouter.patch('/quotation-templates/:id', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => {
+  const id = z.string().cuid().parse(req.params.id); const input = templateInput.partial().parse(req.body); const { lines, ...template } = input;
+  try {
+    const data = await prisma.$transaction(async (tx) => {
+      await tx.quotationTemplate.update({ where: { id }, data: template });
+      if (lines) { await tx.templateLine.deleteMany({ where: { templateId: id } }); await tx.templateLine.createMany({ data: lines.map((line) => ({ ...line, templateId: id, variantId: line.variantId ?? null })) }); }
+      return tx.quotationTemplate.findUniqueOrThrow({ where: { id }, include: { lines: true } });
+    });
+    res.json({ data });
+  } catch { throw new AppError(404, 'NOT_FOUND', 'Quotation template not found.'); }
+});
 
 catalogRouter.get('/products', requireAuth, async (req, res) => {
   const page = parsePagination(req.query, { allowedSort: ['name', 'createdAt'] }); const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';

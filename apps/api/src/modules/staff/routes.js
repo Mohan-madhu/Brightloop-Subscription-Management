@@ -24,6 +24,26 @@ staffRouter.get('/', requireAuth, requireRole('ADMIN'), async (req, res) => {
   res.json({ data, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
 });
 
+staffRouter.patch('/:id', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => {
+  const id = z.string().cuid().parse(req.params.id);
+  const input = z.object({ firstName: z.string().trim().min(1).max(100).optional(), lastName: z.string().trim().max(100).nullable().optional(), isActive: z.boolean().optional(), roles: z.array(z.enum(['MARKETING', 'FINANCE'])).min(1).optional() }).parse(req.body);
+  if (Object.keys(input).length === 0) throw new AppError(400, 'VALIDATION_ERROR', 'At least one staff field is required.');
+  const data = await prisma.$transaction(async (tx) => {
+    const staff = await tx.user.findUnique({ where: { id } });
+    if (!staff || staff.kind !== 'STAFF') throw new AppError(404, 'NOT_FOUND', 'Staff user not found.');
+    const { roles, ...userData } = input;
+    await tx.user.update({ where: { id }, data: userData });
+    if (roles) {
+      const roleRows = await tx.role.findMany({ where: { code: { in: roles } } });
+      if (roleRows.length !== roles.length) throw new AppError(503, 'SERVICE_UNAVAILABLE', 'Required staff roles are not configured.');
+      await tx.userRole.deleteMany({ where: { userId: id } });
+      await tx.userRole.createMany({ data: roleRows.map((role) => ({ userId: id, roleId: role.id })) });
+    }
+    return tx.user.findUniqueOrThrow({ where: { id }, select: { id: true, email: true, firstName: true, lastName: true, isActive: true, roles: { select: { role: { select: { code: true, name: true } } } } } });
+  });
+  res.json({ data });
+});
+
 staffRouter.post('/', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => {
   const input = inputSchema.parse(req.body);
   if (await prisma.user.findUnique({ where: { email: input.email } })) throw new AppError(409, 'CONFLICT', 'An account already exists for this email.');
