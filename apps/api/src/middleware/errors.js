@@ -3,7 +3,6 @@ export class AppError extends Error {
 }
 export function notFound(req, res) { res.status(404).json({ error: { code: 'NOT_FOUND', message: `No route for ${req.method} ${req.path}`, details: [] } }); }
 export function errorHandler(error, _req, res, _next) {
-  console.error('Unhandled request error:', error?.name, error?.code, error?.status);
   if (error instanceof AppError || (Number.isInteger(error?.status) && typeof error?.code === 'string')) {
     return res.status(error.status).json({ error: { code: error.code, message: error.message, details: error.details ?? [] } });
   }
