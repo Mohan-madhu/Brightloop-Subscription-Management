@@ -7,3 +7,4 @@ apps/*/.env
 apps/*/.env.local
 coverage/
 generated/
+apps/web/tsconfig.tsbuildinfo
