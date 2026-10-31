@@ -252,6 +252,11 @@ async function recordWebhookEvent({ rawBody, event, eventId, source }) {
   });
 }
 
+/**
+ * Verifies and processes an incoming Razorpay webhook.
+ * Enforces raw body presence, validates HMAC-SHA256 signature in constant time,
+ * deduplicates incoming webhook events using providerEventId, and updates invoice balances atomically.
+ */
 export async function processRazorpayWebhook({ rawBody, signature, eventId }) {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret) throw new AppError(503, 'PAYMENT_PROVIDER_NOT_CONFIGURED', 'RAZORPAY_WEBHOOK_SECRET is not configured.');

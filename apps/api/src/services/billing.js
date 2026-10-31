@@ -79,6 +79,10 @@ async function loadDiscountCandidates(tx, now) {
   });
 }
 
+/**
+ * Locks eligible discount rows in deterministic ID order with SELECT ... FOR UPDATE,
+ * and counts non-released usages to prevent concurrency race conditions on discount caps.
+ */
 async function lockDiscountsAndCountUsage(tx, discounts) {
   const usageCounts = {};
   for (const discount of [...discounts].sort((left, right) => left.id.localeCompare(right.id))) {
@@ -200,6 +204,11 @@ async function createInvoiceForPeriod(tx, { subscription, period, taxes, discoun
   return { invoice, period: billingPeriod, pricing };
 }
 
+/**
+ * Executes recurring invoice generation for a subscription within a serializable transaction.
+ * Uses PostgreSQL advisory transaction locks to guarantee mutual exclusion per subscription,
+ * ensuring parallel scheduler or manual billing attempts do not generate duplicate invoices.
+ */
 async function billSubscriptionInTransaction(tx, subscriptionId, asOfDate, now) {
   await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`brightloop:subscription-billing:${subscriptionId}`}))`;
   const subscription = await tx.subscription.findUnique({
