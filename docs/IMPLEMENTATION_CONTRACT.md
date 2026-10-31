@@ -1,25 +1,47 @@
 # Brightloop implementation contract
 
-This document is the integration contract for the initial backend modules. Express owns authorization and all writes; the web application calls only `/api/v1` endpoints. Responses use the shapes in `API_CONVENTIONS.md`. Money is an INR decimal string with two fractional digits and dates are `YYYY-MM-DD`.
+## Data and ownership
 
-## Authentication and authorization
+Mohan owns `apps/api/prisma/**`, `src/config`, `src/db`, `src/middleware`, auth, catalog, customer, quotation and subscription modules. Vijay owns invoices, `BillingPeriod` generation, `Invoice`/`Payment` writes, outbox delivery and reports. Frontend code calls Express only.
 
-Authenticated endpoints use `Authorization: Bearer <access-token>`. The access token carries only a user ID; Express resolves active roles and record access for every request. Admin has full access, Marketing has only assigned customers, Finance has financial access, and Customer has only its own customer record. Public requests cannot set staff roles.
+Core schema names are `User`, `AuthCredential`, `Role`, `UserRole`, `AuthToken`, `Customer`, `CustomerAssignment`, `Product`, `ProductVariant`, `Attribute`, `VariantAttributeValue`, `Plan`, `PlanProduct`, `Tax`, `Discount`, `QuotationTemplate`, `Quotation`, `Subscription`, `SubscriptionLine`, `SubscriptionStatusLog`, and `BillingPeriod`. Lifecycle enums are `QuoteStatus` and `SubscriptionStatus`. Decimal API values are strings.
 
-Planned routes are `POST /auth/login`, `POST /auth/activate`, `POST /auth/password-reset/request`, `POST /auth/password-reset/confirm`, and `GET /auth/me`. Admin-only staff creation is `POST /staff`. Activation and reset flows consume one hashed, expiring token. The exact login/session transport is an implementation decision that must be finalized before frontend authentication work starts.
+## Shared backend interfaces
 
-## Catalog configuration
+`src/db/prisma.js` exports the singleton `prisma`. `src/middleware/validate.js` exports `parsePagination`; `src/middleware/errors.js` exports `AppError`. `src/middleware/auth.js` exports `requireAuth`, `requireRole`, and `requireCustomerAccess`. Auth routers register in `src/app.js`.
 
-Admin-only routes are `/products`, `/products/:id`, `/plans`, `/plans/:id`, `/taxes`, and `/discounts`. Collection routes use the shared pagination query parameters. Product and plan writes accept only catalog fields represented in `schema.prisma`; prices are decimal strings. Plans own billing intervals. Catalog APIs do not calculate invoices.
+`src/services/calculations.js` exports `calculateQuotationTotals(input)` and `selectBestDiscount(candidates, context)`. They are pure shared functions: decimal-string inputs/outputs, half-up two-decimal rounding, discount before tax, and stable-ID discount tie-breaking. Vijay owns invoice use of the result and subscription-to-billing consumption: use persisted `Subscription`, `SubscriptionLine`, `BillingPeriod`, and status logs; a subscription is billable only when `status=ACTIVE`.
 
-## Customers, quotations, and subscriptions
+The existing `EmailOutbox` is the transactional email interface: auth stores `{ type, token }` in `body` in the same transaction as a token row. Vijay’s delivery worker is the only sender.
 
-Customer records use `/customers`; customer assignment is `/customers/:id/assignments`. Marketing record access is checked against `CustomerAssignment`. Quotations use `/quotations` and subscriptions use `/subscriptions`; accepted quotation conversion is a single database transaction. Subscription lifecycle actions are explicit status-transition routes and append status logs. Billing lines and periods are owned by the schema but invoice generation remains Vijay's billing module.
+## Auth and access
 
-## Backend conventions for team members
+**IMPLEMENTED:** `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, and `GET /api/v1/auth/me` use opaque random values stored hashed server-side and returned only as an HttpOnly `bl_session` cookie. Cookie settings are `SameSite=Lax`, `Secure` in production, and `Path=/`. Mutations require the allowed `WEB_ORIGIN`; cookie-auth mutations also require `X-CSRF-Token` matching the non-HttpOnly `bl_csrf` cookie.
 
-Import the singleton Prisma client from `apps/api/src/db/prisma.js`. Use `prisma.$transaction` for a conversion or any multi-record state change. Reuse the shared pagination validator and centralized error response middleware. Never query Prisma from the frontend, calculate authoritative totals in the browser, or bypass record-access checks.
+**IMPLEMENTED:** `POST /auth/signup`, `POST /auth/activate`, `POST /auth/password-reset/request`, and `POST /auth/password-reset/confirm`. Admin-only staff creation remains planned. Signup accepts `{email,firstName,lastName?,password}`; password is 9+ characters including upper, lower and special. Public payloads never contain roles. Reset request returns `{data:{accepted:true}}` whether an account exists. Errors are `VALIDATION_ERROR`, `AUTHENTICATION_REQUIRED`, `FORBIDDEN`, `INVALID_CREDENTIALS`, `CONFLICT`, and `RATE_LIMITED`.
 
-## Current database limitations
+## HTTP routes
 
-The current schema does not enforce a single global tax applicability row because nullable columns are distinct in PostgreSQL unique indexes. It also does not relate variant IDs on template, quotation, or subscription lines by foreign key, and it does not represent global/subscription discount targets. Do not make these fields behave as if those missing constraints exist; schema changes require Mohan's reviewed migration.
+All list routes accept `page`, `pageSize`, `search`, `sortBy`, and `sortOrder`; supported sort keys are declared per route. Responses and errors use `API_CONVENTIONS.md`.
+
+| Status | Route | Role/access | Request/result |
+|---|---|---|---|
+| IMPLEMENTED | `GET /catalog/products` | authenticated | paginated products; Marketing/Customer read only |
+| IMPLEMENTED | `POST/PATCH /catalog/products/:id?` | Admin | product fields, decimal prices as strings |
+| PLANNED | `POST/PATCH /catalog/products/:id/variants/:variantId?` | Admin | `{sku?,priceAdjustment,attributes[]}` |
+| IMPLEMENTED | `GET/POST/PATCH /catalog/plans` | authenticated/Admin write | plan and `products[]` with `isAddon`/price |
+| IMPLEMENTED | `GET/POST/PATCH /catalog/taxes`, `/catalog/discounts` | authenticated/Admin write | configuration only; targets limited to schema-supported product/variant/plan |
+| IMPLEMENTED | `GET /customers`, `GET /customers/:id` | Admin/Finance; Marketing assigned; Customer self | customer fields |
+| IMPLEMENTED | `POST /customers/:id/assignments` | Admin | `{userId}` |
+| PLANNED | `GET/POST/PATCH /quotation-templates` | authenticated/Admin write | template lines and terms |
+| IMPLEMENTED | `POST/GET /quotations/:id` | Admin or assigned Marketing | quotation line records; no total is exposed until Vijay's calculator contract exists |
+| IMPLEMENTED | `POST /quotations/:id/accept` | Admin or assigned Marketing | transactionally creates linked subscription |
+| IMPLEMENTED | `GET /subscriptions/:id`, `POST /subscriptions/:id/actions` | Admin/Finance, assigned Marketing, self Customer | explicit lifecycle action |
+
+## Financial and date rules
+
+Subscription-line agreed prices are the invoice input; plan base price appears once and product base price is never added a second time. Round decimal currency half-up to two places. Tax is tax-exclusive and applied after the selected discount. Proposed discount rule, pending approval: select the eligible rule with the greatest monetary reduction, then stable rule ID. Timestamps are UTC; calendar billing uses Asia/Kolkata and preserves the subscription anchor. Cancellation with recorded payments is rejected; refunds are out of scope.
+
+## Unresolved constraints
+
+The current schema does not enforce global tax applicability with nullable unique fields, lacks variant FKs on template/quotation/subscription lines, and lacks explicit global/subscription discount targets. These require a reviewed migration before the relevant API can claim those capabilities. Offline writes remain unapproved.

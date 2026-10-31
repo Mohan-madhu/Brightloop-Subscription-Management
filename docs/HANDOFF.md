@@ -2,7 +2,7 @@
 
 ## Migration
 
-`20261031000000_phase0_foundation` is the initial PostgreSQL migration at `apps/api/prisma/migrations/20261031000000_phase0_foundation/migration.sql`. It was generated locally with Prisma CLI 6.19.3 using `prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script`; this workflow did not contact a database or require a shadow database. It has not been applied.
+`20261031000000_phase0_foundation` is the initial PostgreSQL migration at `apps/api/prisma/migrations/20261031000000_phase0_foundation/migration.sql`. It was generated locally with Prisma CLI 6.19.3 using `prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script`; this workflow did not contact a database or require a shadow database. It was deployed to the configured Brightloop PostgreSQL `public` schema after a read-only check confirmed the schema had zero tables and no migration history.
 
 The migration creates the schema enums, tables, foreign keys, unique keys and indexes represented by `apps/api/prisma/schema.prisma`. Review confirmed `DECIMAL(14,2)` money fields, `DECIMAL(5,2)` tax rates, restrictive foreign-key deletion behavior, unique invoice billing periods, provider/event identifiers, and the documented likely-query indexes.
 
@@ -10,11 +10,13 @@ Known schema gaps to resolve in a later approved schema change: nullable composi
 
 ## Execution and verification
 
+Passed against the configured PostgreSQL database: `npm run prisma:deploy`; two consecutive `npm run seed` executions; and `prisma migrate status`, which reports the database schema up to date. Repeatable seed counts are four roles, four billing intervals, one company setting and one tax rule. API checks passed for readiness (200), public company (200), billing intervals (200 with Daily/Weekly/Monthly/Yearly), and invalid pagination (structured 400).
+
 Passed locally: `npm exec --workspace @brightloop/api prisma -- --version`; initial migration SQL generation; `DATABASE_URL=<non-secret local placeholder> npm run prisma:validate`; and `npm run prisma:generate`.
 
-Unrun: `prisma migrate status`, `npm run prisma:deploy`, both seed runs, readiness/public endpoint checks against PostgreSQL, and database migration-history verification. No `apps/api/.env` or root `.env` is present locally, so no database target was available and no deployment/seed was attempted. Jobs and email delivery remain disabled by default.
+The local `.env` files remain absent, so each database command used a process-only environment variable and no credentials were written to disk. Jobs and email delivery remain disabled by default.
 
-To finish safely, Mohan must set `apps/api/.env` with the intended Brightloop `DATABASE_URL`, confirm the target has no untracked tables/data or existing unmatched migration history, then run `npm run prisma:deploy`, `npm run seed` twice, and `npm exec --workspace @brightloop/api prisma -- migrate status`. If the target contains unmatched history, stop for manual baselining rather than overwriting it.
+For future deployments, set `apps/api/.env` only in the target environment, confirm the target has matching migration history, then run `npm run prisma:deploy`, `npm run seed` if lookup rows are needed, and `npm exec --workspace @brightloop/api prisma -- migrate status`. If a target contains unmatched history, stop for manual baselining rather than overwriting it.
 
 ## Shared interfaces
 
