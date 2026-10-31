@@ -67,7 +67,9 @@ authRouter.post('/password-reset/confirm', rateLimit({ prefix: 'reset-confirm', 
 authRouter.post('/login', async (req, res) => {
   const { email, password } = loginSchema.parse(req.body);
   const user = await prisma.user.findUnique({ where: { email }, include: { credential: true, roles: { include: { role: true } }, customer: { select: { id: true } } } });
-  if (!user?.credential || !user.isActive || !(await argon2.verify(user.credential.passwordHash, password))) throw new AppError(401, 'INVALID_CREDENTIALS', 'Email or password is incorrect.');
+  if (!user?.credential || !user.isActive || !(await argon2.verify(user.credential.passwordHash, password))) {
+    return res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect.', details: [] } });
+  }
   const token = newToken(); const csrfToken = newToken();
   await prisma.session.create({ data: { userId: user.id, tokenHash: hashToken(token), csrfTokenHash: hashToken(csrfToken), expiresAt: sessionExpiry() } });
   const secure = process.env.NODE_ENV === 'production';
