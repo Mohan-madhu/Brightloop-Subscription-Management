@@ -1,0 +1,9 @@
+node_modules/
+.next/
+*.log
+.env
+.env.local
+apps/*/.env
+apps/*/.env.local
+coverage/
+generated/

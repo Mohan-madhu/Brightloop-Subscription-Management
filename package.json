@@ -1,0 +1,22 @@
+{
+  "name": "brightloop-subscription-management",
+  "private": true,
+  "version": "0.1.0",
+  "engines": { "node": ">=20.19 <25" },
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "concurrently -n web,api -c cyan,magenta \"npm run dev -w @brightloop/web\" \"npm run dev -w @brightloop/api\"",
+    "dev:web": "npm run dev -w @brightloop/web",
+    "dev:api": "npm run dev -w @brightloop/api",
+    "build": "npm run build -w @brightloop/web",
+    "lint": "npm run lint -w @brightloop/web",
+    "typecheck": "npm run typecheck -w @brightloop/web",
+    "prisma:validate": "npm run prisma:validate -w @brightloop/api",
+    "prisma:generate": "npm run prisma:generate -w @brightloop/api",
+    "prisma:deploy": "npm run prisma:deploy -w @brightloop/api",
+    "seed": "npm run seed -w @brightloop/api",
+    "start:web": "npm run start -w @brightloop/web",
+    "start:api": "npm run start -w @brightloop/api"
+  },
+  "devDependencies": { "concurrently": "^9.2.1" }
+}

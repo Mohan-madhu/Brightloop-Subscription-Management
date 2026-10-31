@@ -1,0 +1,18 @@
+openapi: 3.1.0
+info: { title: Brightloop Phase 0 API, version: 0.1.0 }
+paths:
+  /api/v1/health/live:
+    get: { responses: { '200': { description: Process alive } } }
+  /api/v1/health/ready:
+    get: { responses: { '200': { description: Database ready }, '503': { description: Database unavailable } } }
+  /api/v1/public/company:
+    get: { responses: { '200': { description: Public company fields }, '404': { description: Not configured } } }
+  /api/v1/public/billing-intervals:
+    get:
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+        - { name: search, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: sortBy, in: query, schema: { type: string, enum: [name, code] } }
+        - { name: sortOrder, in: query, schema: { type: string, enum: [asc, desc] } }
+      responses: { '200': { description: Paginated active intervals }, '400': { description: Invalid query } }

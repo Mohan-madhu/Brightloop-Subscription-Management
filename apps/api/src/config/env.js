@@ -1,0 +1,16 @@
+import dotenv from 'dotenv';
+import { z } from 'zod';
+
+dotenv.config({ path: new URL('../../.env', import.meta.url) });
+
+const schema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+  DATABASE_URL: z.string().url(),
+  WEB_ORIGIN: z.string().url().default('http://localhost:3000'),
+  APP_BASE_URL: z.string().url().default('http://localhost:3000'),
+  JOBS_ENABLED: z.enum(['true', 'false']).default('false'),
+  EMAIL_DELIVERY_ENABLED: z.enum(['true', 'false']).default('false')
+});
+
+export const env = schema.parse(process.env);

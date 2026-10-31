@@ -1,0 +1,5 @@
+-- Inspectable Phase 0 migration placeholder.
+-- Generate the final provider-specific SQL only in Mohan's isolated shadow database:
+-- npm run prisma:deploy is for applying reviewed migrations; it is intentionally not run by Phase 0 setup.
+-- The canonical schema is prisma/schema.prisma. This marker prevents accidental migration application.
+-- Do not replace it with db push. Mohan owns the reviewed SQL migration.

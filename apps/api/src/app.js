@@ -1,0 +1,21 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import pino from 'pino';
+import pinoHttp from 'pino-http';
+import { env } from './config/env.js';
+import { healthRouter } from './modules/health/routes.js';
+import { publicRouter } from './modules/public/routes.js';
+import { errorHandler, notFound } from './middleware/errors.js';
+
+export const app = express();
+const logger = pino({ level: process.env.LOG_LEVEL ?? 'info', redact: ['req.headers.authorization', 'req.headers.cookie'] });
+app.disable('x-powered-by');
+app.use(pinoHttp({ logger }));
+app.use(helmet());
+app.use(cors({ origin: env.WEB_ORIGIN, methods: ['GET', 'POST', 'PATCH', 'DELETE'], credentials: true }));
+app.use(express.json({ limit: '100kb' }));
+app.use('/api/v1/health', healthRouter);
+app.use('/api/v1/public', publicRouter);
+app.use(notFound);
+app.use(errorHandler);
