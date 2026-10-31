@@ -31,7 +31,7 @@ type KanbanSummaryApi = { today: string; buckets: Array<{ bucket: string; label:
 type SubscriptionApi = {
   id: string; number: string; status: string; startDate: string; expiryDate: string | null;
   version: number; plan: { name: string; price: string; allowPause: boolean; allowRenewal: boolean; allowEarlyClosure: boolean; allowEndDateClosure: boolean };
-  lines: Array<{ id: string; description: string; quantity: number; agreedPrice: string; isAddon: boolean }>;
+  lines: Array<{ id: string; productId?: string; variantId?: string | null; description: string; quantity: number; agreedPrice: string; isAddon: boolean }>;
   logs: Array<{ id: string; status: string; note: string | null; effectiveAt: string | null; createdAt: string }>;
 };
 type CustomerApi = { id: string; legalName: string; billingEmail: string; billingAddress: unknown; version: number; user?: { email: string; firstName: string; lastName: string | null } };
@@ -62,7 +62,7 @@ function toSearch(query: Record<string, string | number | undefined>) {
   return params.toString();
 }
 function toViewSubscription(item: SubscriptionApi): SubscriptionView {
-  return { id: item.id, number: item.number, planName: item.plan.name, status: item.status, startDate: item.startDate, expiryDate: item.expiryDate, amount: item.plan.price, currency: 'INR', allowPause: item.plan.allowPause, allowRenewal: item.plan.allowRenewal, allowEarlyClosure: item.plan.allowEarlyClosure, allowEndDateClosure: item.plan.allowEndDateClosure, version: item.version, lines: item.lines.map(line => ({ id: line.id, description: line.description, quantity: line.quantity, agreedPrice: line.agreedPrice, isAddon: line.isAddon })), history: item.logs.map(log => ({ status: log.status, note: log.note, at: log.effectiveAt ?? log.createdAt })) };
+  return { id: item.id, number: item.number, planName: item.plan.name, status: item.status, startDate: item.startDate, expiryDate: item.expiryDate, amount: item.plan.price, currency: 'INR', allowPause: item.plan.allowPause, allowRenewal: item.plan.allowRenewal, allowEarlyClosure: item.plan.allowEarlyClosure, allowEndDateClosure: item.plan.allowEndDateClosure, version: item.version, lines: item.lines.map(line => ({ id: line.id, productId: line.productId, variantId: line.variantId, description: line.description, quantity: line.quantity, agreedPrice: line.agreedPrice, isAddon: line.isAddon })), history: item.logs.map(log => ({ status: log.status, note: log.note, at: log.effectiveAt ?? log.createdAt })) };
 }
 
 export async function getFinanceDashboard(range?: DateRange): Promise<FinanceDashboardView> {
@@ -131,9 +131,16 @@ export async function getCustomerPortalData(invoicePage: number, paymentPage: nu
     dashboard, invoices, payments,
   };
 }
+export async function getCustomerSubscriptions(page = 1): Promise<{ rows: SubscriptionView[]; pagination: PageInfo }> {
+  const result = await apiListRequest<SubscriptionApi>(`/subscriptions?page=${page}&pageSize=20&sortBy=createdAt&sortOrder=desc`);
+  return { rows: result.data.map(toViewSubscription), pagination: result.pagination };
+}
 export async function getSubscription(id: string): Promise<SubscriptionView> { return toViewSubscription(await apiRequest<SubscriptionApi>(`/subscriptions/${encodeURIComponent(id)}`)); }
-export async function subscriptionAction(id: string, action: 'PAUSE' | 'RESUME' | 'CLOSE') {
+export async function subscriptionAction(id: string, action: 'ACTIVATE' | 'PAUSE' | 'RESUME' | 'RENEW' | 'CLOSE') {
   return apiRequest(`/subscriptions/${encodeURIComponent(id)}/actions`, { method: 'POST', body: { action }, ...csrf() });
+}
+export async function toggleSubscriptionAddon(id: string, input: { productId: string; variantId?: string | null; quantity: number; enabled: boolean }) {
+  return apiRequest(`/subscriptions/${encodeURIComponent(id)}/add-ons`, { method: 'POST', body: input, ...csrf() });
 }
 export async function createRazorpayOrder(invoiceId: string) { return apiRequest<OrderApi>(`/invoices/${encodeURIComponent(invoiceId)}/razorpay/order`, { method: 'POST', ...csrf() }); }
 export async function verifyRazorpayPayment(paymentId: string, orderId: string) { return apiRequest<{ applied: boolean; duplicate: boolean; paymentId: string; invoiceId: string; status?: string; balance?: string }>('/payments/razorpay/verify', { method: 'POST', body: { paymentId, orderId }, ...csrf() }); }

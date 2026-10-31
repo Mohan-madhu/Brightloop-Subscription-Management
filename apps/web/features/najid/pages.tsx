@@ -5,9 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from '../../lib/session';
 import {
   getCustomerPortalData, getCustomerInvoice, getFinanceDashboard, getInvoice,
-  getInvoices, getKanban, getPayments, getQuarterlyReports, getSubscription,
+  getInvoices, getKanban, getPayments, getQuarterlyReports, getSubscription, getCustomerSubscriptions,
   invoiceAction, openInvoicePrint, recordPayment, runQuarterlyReport,
-  subscriptionAction,
+  subscriptionAction, toggleSubscriptionAddon,
 } from './api';
 import { startRazorpayCheckout } from './razorpay';
 import {
@@ -16,6 +16,7 @@ import {
   QuarterlyReportsScreen, SubscriptionDetailScreen,
 } from './screens';
 import type { DateRange, FinanceDashboardView, InvoiceDetailView, InvoiceQuery, InvoiceSummary, PageInfo, PaymentQuery, PaymentView, QuarterlyReportView, SubscriptionView } from './types';
+import { Pagination } from '../../components/shared/ui';
 
 function useRemote<T>(request: () => Promise<T>) {
   const [data, setData] = useState<T | null>(null); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [generation, setGeneration] = useState(0);
@@ -77,9 +78,9 @@ export function FinanceQuarterlyReportsPage() {
 
 export function CustomerPortalPage() {
   const [invoicePage, setInvoicePage] = useState(1); const [paymentPage, setPaymentPage] = useState(1);
-  const request = useCallback(() => getCustomerPortalData(invoicePage, paymentPage), [invoicePage, paymentPage]);
-  const state = useRemote<Awaited<ReturnType<typeof getCustomerPortalData>>>(request);
-  const customer = state.data ? { displayName: state.data.customer.displayName, billingEmail: state.data.customer.billingEmail, currency: 'INR' as const, outstanding: state.data.dashboard.outstandingBalance, subscriptions: null, invoices: state.data.invoices.data.map(row => ({ id: row.id, number: row.number, customerName: row.customerName ?? '', issueDate: row.createdAt, dueDate: row.dueDate, currency: 'INR' as const, status: row.overdue ? 'OVERDUE' : row.status, overdue: row.overdue, total: row.total, balance: row.balance })), payments: state.data.payments.data.map(payment => ({ id: payment.id, amount: payment.amount, method: payment.method, status: payment.status, paidAt: payment.paidAt, note: payment.note, reference: payment.providerPaymentId, invoiceNumber: payment.invoiceNumber })) } : null;
+  const request = useCallback(async () => { const [portal, subscriptions] = await Promise.all([getCustomerPortalData(invoicePage, paymentPage), getCustomerSubscriptions()]); return { ...portal, subscriptions }; }, [invoicePage, paymentPage]);
+  const state = useRemote(request);
+  const customer = state.data ? { displayName: state.data.customer.displayName, billingEmail: state.data.customer.billingEmail, currency: 'INR' as const, outstanding: state.data.dashboard.outstandingBalance, subscriptions: state.data.subscriptions.rows, invoices: state.data.invoices.data.map(row => ({ id: row.id, number: row.number, customerName: row.customerName ?? '', issueDate: row.createdAt, dueDate: row.dueDate, currency: 'INR' as const, status: row.overdue ? 'OVERDUE' : row.status, overdue: row.overdue, total: row.total, balance: row.balance })), payments: state.data.payments.data.map(payment => ({ id: payment.id, amount: payment.amount, method: payment.method, status: payment.status, paidAt: payment.paidAt, note: payment.note, reference: payment.providerPaymentId, invoiceNumber: payment.invoiceNumber })) } : null;
   const empty: PageInfo = { page: 1, pageSize: 20, total: 0, totalPages: 0 };
   return <CustomerPortalScreen {...state} onRetry={state.retry} customer={customer} pagination={state.data?.invoices.pagination ?? empty} onPage={setInvoicePage} paymentPagination={state.data?.payments.pagination ?? empty} onPaymentPage={setPaymentPage} onOpenInvoice={id => { window.location.href = `/portal/invoices/${encodeURIComponent(id)}`; }} onOpenSubscription={id => { window.location.href = `/portal/subscriptions/${encodeURIComponent(id)}`; }} />;
 }
@@ -93,9 +94,10 @@ export function CustomerInvoiceDetailPage() {
 export function CustomerSubscriptionDetailPage() {
   const params = useParams<{ subscriptionId: string }>(); const id = params.subscriptionId;
   const request = useCallback(() => getSubscription(id), [id]); const state = useRemote<SubscriptionView>(request);
-  return <SubscriptionDetailScreen {...state} onRetry={state.retry} subscription={state.data} onAction={async action => { const upper = action.toUpperCase() as 'PAUSE' | 'RESUME' | 'CLOSE'; await subscriptionAction(id, upper); state.retry(); }} />;
+  return <SubscriptionDetailScreen {...state} onRetry={state.retry} subscription={state.data} onAction={async action => { const upper = action.toUpperCase() as 'PAUSE' | 'RESUME' | 'RENEW' | 'CLOSE'; await subscriptionAction(id, upper); state.retry(); }} onAddon={async (line) => { if (!line.productId) throw new Error('This add-on cannot be changed because its product reference was not returned.'); await toggleSubscriptionAddon(id, { productId: line.productId, variantId: line.variantId ?? null, quantity: line.quantity, enabled: false }); state.retry(); }} />;
 }
 
-export function CustomerSubscriptionsUnavailable() {
-  return <section className="mx-auto max-w-3xl p-4 sm:p-8"><h1 className="text-2xl font-bold">Your subscriptions</h1><p className="mt-2 text-sm text-amber-900">The backend has a scoped subscription detail endpoint, but no own-subscription list or pagination endpoint. No customer ID selector or fabricated list is used.</p></section>;
+export function CustomerSubscriptionsPage() {
+  const router = useRouter(); const [page, setPage] = useState(1); const request = useCallback(() => getCustomerSubscriptions(page), [page]); const state = useRemote(request); const empty: PageInfo = { page, pageSize: 20, total: 0, totalPages: 0 };
+  return <section className="mx-auto w-full max-w-5xl p-4 sm:p-8"><h1 className="text-2xl font-bold">Your subscriptions</h1><p className="mt-2 text-sm text-slate-600">Review active and past subscriptions managed by your account.</p>{state.error && <p className="mt-4 text-sm text-red-700">{state.error}</p>}{state.loading ? <p className="mt-6 text-sm text-slate-600">Loading subscriptions…</p> : <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5"><ul className="divide-y divide-slate-100">{(state.data?.rows ?? []).map(subscription => <li key={subscription.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><button type="button" className="font-semibold text-indigo-700 hover:underline" onClick={() => router.push(`/portal/subscriptions/${subscription.id}`)}>{subscription.number}</button><p className="mt-1 text-sm text-slate-600">{subscription.planName} · INR {subscription.amount}</p></div><span className="rounded-full bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700">{subscription.status}</span></li>)}</ul>{!(state.data?.rows.length) && <p className="py-8 text-center text-sm text-slate-600">No subscriptions found.</p>}<div className="mt-4"><Pagination page={state.data?.pagination.page ?? empty.page} pageSize={empty.pageSize} total={state.data?.pagination.total ?? 0} onPageChange={setPage} disabled={state.loading} /></div></div>}</section>;
 }

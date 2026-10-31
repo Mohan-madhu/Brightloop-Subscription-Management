@@ -45,7 +45,7 @@ export type SubscriptionView = {
   startDate: string; expiryDate?: string | null; nextBillingDate?: string | null;
   amount: string; currency: 'INR'; allowPause: boolean; allowRenewal: boolean;
   allowEarlyClosure: boolean; allowEndDateClosure: boolean; version: number;
-  lines: Array<{ id: string; description: string; quantity: number; agreedPrice: string; isAddon: boolean }>;
+  lines: Array<{ id: string; productId?: string; variantId?: string | null; description: string; quantity: number; agreedPrice: string; isAddon: boolean }>;
   history?: Array<{ status: string; note?: string | null; at: string }>;
 };
 export type CustomerPortalView = {
