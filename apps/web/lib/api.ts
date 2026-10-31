@@ -1,5 +1,6 @@
 export type Company = { publicName: string; legalName: string; supportEmail: string | null; address: string | null; currency: string; timezone: string };
 export type BillingInterval = { code: string; name: string; unit: string; count: number };
+export type PublicPlan = { id: string; name: string; price: string; billingInterval: BillingInterval; productName: string | null };
 export type ApiPagination = { page: number; pageSize: number; total: number; totalPages: number };
 export type ApiSuccessResponse<T> = { data: T };
 export type ApiListResponse<T> = { data: T[]; pagination: ApiPagination };
@@ -101,3 +102,4 @@ export async function apiListRequest<T>(path: string, options: ApiRequestOptions
 
 export const getCompany = () => apiRequest<Company>('/public/company');
 export const getIntervals = async () => (await apiListRequest<BillingInterval>('/public/billing-intervals?page=1&pageSize=20')).data;
+export const getPublicPlans = async () => (await apiListRequest<PublicPlan>('/public/plans?page=1&pageSize=20&sortBy=createdAt&sortOrder=asc')).data;

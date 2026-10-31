@@ -17,3 +17,13 @@ publicRouter.get('/billing-intervals', async (req, res) => {
   const [data, total] = await prisma.$transaction([prisma.billingInterval.findMany({ where, skip, take: pageSize, orderBy: orderBy ?? { name: 'asc' }, select: { code: true, name: true, unit: true, count: true } }), prisma.billingInterval.count({ where })]);
   return res.json({ data, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
 });
+publicRouter.get('/plans', async (req, res) => {
+  const { page, pageSize, skip, orderBy } = parsePagination(req.query, { allowedSort: ['name', 'price', 'createdAt'] });
+  const where = { active: true, billingInterval: { active: true } };
+  const [plans, total] = await prisma.$transaction([
+    prisma.plan.findMany({ where, skip, take: pageSize, orderBy: orderBy ?? { createdAt: 'asc' }, include: { billingInterval: { select: { code: true, name: true, unit: true, count: true } }, products: { where: { isAddon: false }, take: 1, include: { product: { select: { name: true } } } } } }),
+    prisma.plan.count({ where }),
+  ]);
+  const data = plans.map((plan) => ({ id: plan.id, name: plan.name, price: plan.price, billingInterval: plan.billingInterval, productName: plan.products[0]?.product.name ?? null }));
+  return res.json({ data, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
+});
