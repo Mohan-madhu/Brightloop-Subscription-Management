@@ -1,0 +1,34 @@
+import { invoicesRouter } from './modules/invoices/routes.js';
+import { invoicePaymentsRouter, paymentsRouter } from './modules/payments/routes.js';
+import { reportsRouter } from './modules/reports/routes.js';
+import { jobsRouter } from './modules/jobs/routes.js';
+import { razorpayWebhookRouter } from './modules/webhooks/razorpay.routes.js';
+import { salesRouter } from './modules/sales/routes.js';
+import { authRouter } from './modules/auth/routes.js';
+import { catalogRouter } from './modules/catalog/routes.js';
+import { customerRouter } from './modules/customers/routes.js';
+import { staffRouter } from './modules/staff/routes.js';
+import { publicRouter } from './modules/public/routes.js';
+import { healthRouter } from './modules/health/routes.js';
+import { calculatePricing, selectDiscount, pricingForApi, resolveCatalogUnitPrice } from './services/pricing.js';
+import { addDays, addMonthsAnchored, duePeriodsFor, periodEndFor, quarterBounds, todayInBillingZone } from './services/billing-calendar.js';
+import { dec, moneyString, roundMoney, sumMoney } from './services/money.js';
+import { buildMimeMessage, queueEmail, processEmailOutbox, recoverStaleOutbox, renderTemplate, sendSmtpMail } from './services/email.js';
+import { allocatePaymentToInvoice } from './services/payment-rules.js';
+import { isOverdue, serializeInvoice, serializeInvoiceSummary, serializePayment } from './services/serializers.js';
+import { KANBAN_BUCKETS, defaultReportRange, kanbanBucketWhere, validateReportRange } from './services/reporting-rules.js';
+import { buildQuarterCsv, quarterlySummary } from './services/reports.js';
+import { runDueBilling } from './services/billing.js';
+import { createRazorpayOrder, verifyRazorpayPayment, processRazorpayWebhook } from './services/razorpay.js';
+import { verifyRazorpaySignature } from './services/razorpay-signature.js';
+import { runDueQuarterlyReports, runQuarterlyReport, listQuarterlyRuns } from './services/quarterly-reports.js';
+import { startScheduler, stopScheduler } from './jobs/scheduler.js';
+import { env } from './config/env.js';
+
+const routers = { invoicesRouter, invoicePaymentsRouter, paymentsRouter, reportsRouter, jobsRouter, razorpayWebhookRouter, salesRouter, authRouter, catalogRouter, customerRouter, staffRouter, publicRouter, healthRouter };
+const services = { calculatePricing, selectDiscount, pricingForApi, resolveCatalogUnitPrice, addDays, addMonthsAnchored, duePeriodsFor, periodEndFor, quarterBounds, todayInBillingZone, dec, moneyString, roundMoney, sumMoney, buildMimeMessage, queueEmail, processEmailOutbox, recoverStaleOutbox, renderTemplate, sendSmtpMail, allocatePaymentToInvoice, isOverdue, serializeInvoice, serializeInvoiceSummary, serializePayment, KANBAN_BUCKETS, defaultReportRange, kanbanBucketWhere, validateReportRange, buildQuarterCsv, quarterlySummary, runDueBilling, createRazorpayOrder, verifyRazorpayPayment, processRazorpayWebhook, verifyRazorpaySignature, runDueQuarterlyReports, runQuarterlyReport, listQuarterlyRuns, startScheduler, stopScheduler, env };
+const missing = [];
+for (const [name, value] of Object.entries(routers)) if (!value) missing.push(`router:${name}`);
+for (const [name, value] of Object.entries(services)) if (!value) missing.push(`service:${name}`);
+if (missing.length) { console.error('MISSING EXPORTS', missing.join(', ')); process.exit(1); }
+console.log('IMPORT_CHECK_OK', Object.keys(routers).length, 'routers and', Object.keys(services).length, 'service entries resolved.');
