@@ -70,6 +70,7 @@ model User {
  customer Customer?
  assignments CustomerAssignment[] @relation("assignee")
  tokens AuthToken[]
+ sessions Session[]
 }
 model AuthCredential {
 id String @id @default(cuid())
@@ -105,6 +106,17 @@ id String @id @default(cuid())
  createdAt DateTime @default(now())
  user User @relation(fields:[userId],references:[id],onDelete:Restrict)
  @@index([userId,purpose,expiresAt])
+}
+model Session {
+ id String @id @default(cuid())
+ userId String
+ tokenHash String @unique
+ csrfTokenHash String
+ expiresAt DateTime
+ revokedAt DateTime?
+ createdAt DateTime @default(now())
+ user User @relation(fields:[userId],references:[id],onDelete:Restrict)
+ @@index([userId,expiresAt])
 }
 model Customer {
 id String @id @default(cuid())

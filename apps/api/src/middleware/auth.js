@@ -1,16 +1,27 @@
 import { prisma } from '../db/prisma.js';
 import { AppError } from './errors.js';
-import { verifyAccessToken } from '../utils/access-token.js';
+import { hashToken, tokensMatch } from '../utils/session.js';
+
+function readCookie(header, name) {
+  const item = header?.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`));
+  return item ? decodeURIComponent(item.slice(name.length + 1)) : null;
+}
 
 export async function requireAuth(req, _res, next) {
-  const authorization = req.get('authorization');
-  if (!authorization?.startsWith('Bearer ')) return next(new AppError(401, 'AUTHENTICATION_REQUIRED', 'A valid access token is required.'));
-  const payload = verifyAccessToken(authorization.slice(7));
-  if (!payload) return next(new AppError(401, 'INVALID_ACCESS_TOKEN', 'The access token is invalid or expired.'));
-  const user = await prisma.user.findUnique({ where: { id: payload.sub }, include: { roles: { include: { role: true } }, customer: { select: { id: true } } } });
-  if (!user || !user.isActive) return next(new AppError(401, 'INVALID_ACCESS_TOKEN', 'The access token is invalid or expired.'));
-  req.auth = { userId: user.id, kind: user.kind, roles: user.roles.map(({ role }) => role.code), customerId: user.customer?.id ?? null };
+  const token = readCookie(req.get('cookie'), 'bl_session');
+  if (!token) return next(new AppError(401, 'AUTHENTICATION_REQUIRED', 'A valid session is required.'));
+  const session = await prisma.session.findUnique({ where: { tokenHash: hashToken(token) }, include: { user: { include: { roles: { include: { role: true } }, customer: { select: { id: true } } } } } });
+  if (!session || session.revokedAt || session.expiresAt <= new Date() || !session.user.isActive) return next(new AppError(401, 'INVALID_SESSION', 'The session is invalid or expired.'));
+  req.auth = { userId: session.user.id, kind: session.user.kind, roles: session.user.roles.map(({ role }) => role.code), customerId: session.user.customer?.id ?? null, sessionId: session.id, csrfTokenHash: session.csrfTokenHash };
   return next();
+}
+
+export function requireCsrf(req, _res, next) {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  const origin = req.get('origin');
+  if (origin && origin !== process.env.WEB_ORIGIN) return next(new AppError(403, 'FORBIDDEN', 'Request origin is not allowed.'));
+  const token = req.get('x-csrf-token');
+  return token && tokensMatch(token, req.auth?.csrfTokenHash ?? '') ? next() : next(new AppError(403, 'CSRF_VALIDATION_FAILED', 'CSRF validation failed.'));
 }
 
 export function requireRole(...roles) {
