@@ -10,6 +10,7 @@ type PlanProduct = { productId: string; variantId?: string | null; isAddon: bool
 type Plan = { id: string; name: string; billingIntervalId: string; billingInterval?: { id: string; name: string; unit: string; count: number }; price: string; minimumQuantity: number; availableFrom: string | null; availableUntil: string | null; allowEarlyClosure: boolean; allowPause: boolean; allowRenewal: boolean; allowEndDateClosure: boolean; active: boolean; products?: (PlanProduct & { product?: Product })[] };
 type TaxRule = { id: string; name: string; rate: string; taxExclusive: boolean; active: boolean };
 type Discount = { id: string; code: string; kind: 'FIXED' | 'PERCENTAGE'; amount: string; minimumPurchase: string | null; minimumQuantity: number | null; startsAt: string | null; endsAt: string | null; usageLimit: number | null; active: boolean; targets?: { productId: string | null; variantId: string | null; planId: string | null }[] };
+type BillingInterval = { id: string; code: string; name: string; unit: string; count: number; active: boolean };
 type StaffResult = { id: string; email: string; firstName: string; lastName: string | null; kind: string };
 type Section = 'products' | 'plans' | 'taxes' | 'discounts' | 'staff';
 type ServerFieldError = Record<string, string>;
@@ -36,6 +37,7 @@ function PageTitle({ title, description }: { title: string; description: string 
 export function AdminCatalogPage({ section }: { section: Exclude<Section, 'staff'> }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [intervals, setIntervals] = useState<BillingInterval[]>([]);
   const [taxes, setTaxes] = useState<TaxRule[]>([]);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [pagination, setPagination] = useState<ApiPagination>({ page: 1, pageSize: 20, total: 0, totalPages: 0 });
@@ -64,13 +66,13 @@ export function AdminCatalogPage({ section }: { section: Exclude<Section, 'staff
         const result = await apiListRequest<Product>(`/catalog/products?${query}`);
         setProducts(result.data); setPagination(result.pagination);
       } else if (section === 'plans') {
-        const [planRows, productRows] = await Promise.all([apiRequest<Plan[]>('/catalog/plans'), apiListRequest<Product>('/catalog/products?page=1&pageSize=100')]);
-        setPlans(planRows); setProducts(productRows.data);
+        const [planRows, productRows, intervalRows] = await Promise.all([apiListRequest<Plan>(`/catalog/plans?page=${page}&pageSize=20&sortBy=name&sortOrder=asc${search.trim() ? `&search=${encodeURIComponent(search.trim())}` : ''}`), apiListRequest<Product>('/catalog/products?page=1&pageSize=100'), apiListRequest<BillingInterval>('/catalog/billing-intervals?page=1&pageSize=100')]);
+        setPlans(planRows.data); setPagination(planRows.pagination); setProducts(productRows.data); setIntervals(intervalRows.data);
       }
-      else if (section === 'taxes') setTaxes(await apiRequest<TaxRule[]>('/catalog/taxes'));
+      else if (section === 'taxes') { const result = await apiListRequest<TaxRule>(`/catalog/taxes?page=${page}&pageSize=20&sortBy=name&sortOrder=asc${search.trim() ? `&search=${encodeURIComponent(search.trim())}` : ''}`); setTaxes(result.data); setPagination(result.pagination); }
       else {
-        const [discountRows, productRows] = await Promise.all([apiRequest<Discount[]>('/catalog/discounts'), apiListRequest<Product>('/catalog/products?page=1&pageSize=100')]);
-        setDiscounts(discountRows); setProducts(productRows.data);
+        const [discountRows, productRows] = await Promise.all([apiListRequest<Discount>(`/catalog/discounts?page=${page}&pageSize=20&sortBy=code&sortOrder=asc${search.trim() ? `&search=${encodeURIComponent(search.trim())}` : ''}`), apiListRequest<Product>('/catalog/products?page=1&pageSize=100')]);
+        setDiscounts(discountRows.data); setPagination(discountRows.pagination); setProducts(productRows.data);
       }
     } catch (cause) { setError(errorText(cause)); }
     finally { setLoading(false); }
@@ -169,7 +171,7 @@ export function AdminCatalogPage({ section }: { section: Exclude<Section, 'staff
           <label className="flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" checked={productForm.active} onChange={(event) => setProductForm({ ...productForm, active: event.target.checked })} />Active (clear to archive)</label>
         </>}
         {section === 'plans' && <>
-          <FormField id="billingIntervalId" label="Billing interval" description="Only intervals already referenced by a plan are discoverable; the API does not expose an interval-admin/list route." error={fieldError.billingIntervalId} required><Select value={planForm.billingIntervalId} onChange={(event) => setPlanForm({ ...planForm, billingIntervalId: event.target.value })} required><option value="">Select interval</option>{Array.from(new Map(plans.filter((plan) => plan.billingInterval).map((plan) => [plan.billingIntervalId, plan.billingInterval])).entries()).map(([id, interval]) => <option key={id} value={id}>{interval?.name} ({interval?.count} {interval?.unit})</option>)}</Select></FormField>
+          <FormField id="billingIntervalId" label="Billing interval" error={fieldError.billingIntervalId} required><Select value={planForm.billingIntervalId} onChange={(event) => setPlanForm({ ...planForm, billingIntervalId: event.target.value })} required><option value="">Select interval</option>{intervals.filter((interval) => interval.active).map((interval) => <option key={interval.id} value={interval.id}>{interval.name} ({interval.count} {interval.unit})</option>)}</Select></FormField>
           <FormField id="planPrice" label="Plan price (INR)" error={fieldError.price} required><Input inputMode="decimal" pattern="^\\d+(\\.\\d{1,2})?$" value={planForm.price} onChange={(event) => setPlanForm({ ...planForm, price: event.target.value })} required /></FormField>
           <FormField id="minimumQuantity" label="Minimum quantity" error={fieldError.minimumQuantity} required><Input type="number" min="1" step="1" value={planForm.minimumQuantity} onChange={(event) => setPlanForm({ ...planForm, minimumQuantity: event.target.value })} required /></FormField>
           <FormField id="availableFrom" label="Available from"><Input type="date" value={planForm.availableFrom} onChange={(event) => setPlanForm({ ...planForm, availableFrom: event.target.value })} /></FormField>
