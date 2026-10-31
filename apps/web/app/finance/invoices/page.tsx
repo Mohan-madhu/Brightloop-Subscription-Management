@@ -1,0 +1,2 @@
+import { NajidFeaturePending } from '../../../features/najid/contract-pending';
+export default function FinanceInvoicesPage() { return <NajidFeaturePending area="Finance" page="Invoices" dependencies={["Vijay: paginated invoice list/detail, allowlisted search/status/due-date filters, payment history, status history, action permissions, manual-payment API and agreed print/download output.", "Basim: shared API client/session and permission context."]} />; }

@@ -10,7 +10,7 @@ Core schema names are `User`, `AuthCredential`, `Role`, `UserRole`, `AuthToken`,
 
 `src/db/prisma.js` exports the singleton `prisma`. `src/middleware/validate.js` exports `parsePagination`; `src/middleware/errors.js` exports `AppError`. `src/middleware/auth.js` exports `requireAuth`, `requireRole`, and `requireCustomerAccess`. Auth routers register in `src/app.js`.
 
-`src/services/calculations.js` exports `calculateQuotationTotals(input)` and `selectBestDiscount(candidates, context)`. They are pure shared functions: decimal-string inputs/outputs, half-up two-decimal rounding, discount before tax, and stable-ID discount tie-breaking. Vijay owns invoice use of the result and subscription-to-billing consumption: use persisted `Subscription`, `SubscriptionLine`, `BillingPeriod`, and status logs; a subscription is billable only when `status=ACTIVE`.
+`src/services/pricing.js` exports the shared `calculatePricing`, `selectDiscount`, and `pricingForApi` functions. They are pure shared functions: decimal-string API output, half-up two-decimal rounding, discount before tax, and deterministic tie-breaking. Vijay owns invoice use of the result and subscription-to-billing consumption: use persisted `Subscription`, `SubscriptionLine`, `BillingPeriod`, and status logs; a subscription is billable only when `status=ACTIVE`.
 
 The existing `EmailOutbox` is the transactional email interface: auth stores `{ type, token }` in `body` in the same transaction as a token row. Vijay’s delivery worker is the only sender.
 

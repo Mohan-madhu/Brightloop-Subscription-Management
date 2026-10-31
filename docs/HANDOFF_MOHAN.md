@@ -18,7 +18,7 @@ See `IMPLEMENTATION_CONTRACT.md` for paths, roles, request fields, and shared in
 
 ## Final integration verification
 
-PASS: sales acceptance now returns the existing linked subscription on a repeat request and lifecycle close transitions to `CLOSED` instead of the previously incorrect pause state. PASS: invalid lifecycle sources return `INVALID_TRANSITION`. PASS: shared calculator returns decimal strings, applies selected discount before exclusive tax, and uses stable-ID tie-breaking. NOT RUN: complete Admin-to-payment dashboard demo, because Vijay's invoice/payment/router and Basim/Najid frontend modules are not present in this integrated checkout.
+PASS: sales acceptance now returns the existing linked subscription on a repeat request and lifecycle close transitions to `CLOSED` instead of the previously incorrect pause state. PASS: invalid lifecycle sources return `INVALID_TRANSITION`. PASS: auth activation/reset and staff activation emails use Vijay's shared transactional outbox payload. NOT RUN: complete Admin-to-payment dashboard demo, because Basim/Najid frontend modules are not present in this integrated checkout.
 
 ## Verification
 

@@ -1,0 +1,2 @@
+import { NajidFeaturePending } from '../../../features/najid/contract-pending';
+export default function CustomerSubscriptionsPage() { return <NajidFeaturePending area="Customer" page="Your subscriptions" dependencies={["Mohan: own-scoped subscription detail and permission-aware pause/resume/renew/close and next-period line-change APIs.", "Vijay: server-created Razorpay test order and payment verification/status API.", "Basim: authenticated API client/session."]} />; }

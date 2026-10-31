@@ -16,6 +16,7 @@ import { reportsRouter } from './modules/reports/routes.js';
 import { jobsRouter } from './modules/jobs/routes.js';
 import { razorpayWebhookRouter } from './modules/webhooks/razorpay.routes.js';
 import { requireAuth } from './middleware/auth.js';
+import { staffRouter } from './modules/staff/routes.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
 export const app = express();
@@ -31,6 +32,7 @@ app.use('/api/v1/public', publicRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/catalog', catalogRouter);
 app.use('/api/v1/customers', customerRouter);
+app.use('/api/v1/staff', staffRouter);
 app.use('/api/v1', salesRouter);
 app.use('/api/v1/invoices', requireAuth, invoicesRouter);
 app.use('/api/v1/invoices', requireAuth, invoicePaymentsRouter);

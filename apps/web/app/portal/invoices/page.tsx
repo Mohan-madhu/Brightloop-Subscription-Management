@@ -1,0 +1,2 @@
+import { NajidFeaturePending } from '../../../features/najid/contract-pending';
+export default function CustomerInvoicesPage() { return <NajidFeaturePending area="Customer" page="Your invoices and payments" dependencies={["Mohan: own-customer record scoping for invoice and payment history.", "Vijay: invoice balances and server-created Razorpay order plus verified status contract.", "Basim: authenticated API client/session."]} />; }
