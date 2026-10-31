@@ -110,24 +110,26 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 
   const title = { login: 'Sign in', signup: 'Create customer account', activate: 'Activate account', forgot: 'Reset your password', reset: 'Choose a new password' }[mode];
   const isSignup = mode === 'signup';
+  const isLogin = mode === 'login';
+  const isSplitAuth = isSignup || isLogin;
 
-  return <main className={isSignup ? 'relative isolate min-h-screen overflow-hidden bg-[#f7f7fc] px-4 py-8 text-slate-950 sm:px-6 sm:py-12' : 'min-h-screen bg-slate-50 px-4 py-10 sm:px-6'}>
-    {isSignup && <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-0 overflow-hidden"><div className="absolute -right-40 -top-44 h-[34rem] w-[34rem] rounded-full bg-violet-200/50 blur-3xl" /><div className="absolute -bottom-48 -left-40 h-[30rem] w-[30rem] rounded-full bg-indigo-100/60 blur-3xl" /></div>}
-    <section className={isSignup ? 'relative z-10 mx-auto grid max-w-5xl overflow-hidden rounded-[2rem] border border-white bg-white shadow-2xl shadow-indigo-950/10 lg:min-h-[680px] lg:grid-cols-[0.85fr_1.15fr]' : 'mx-auto max-w-md rounded-lg border border-slate-200 bg-white p-5 sm:p-7'}>
-      {isSignup && <aside className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#211747] via-[#3b2a7a] to-violet-700 p-7 text-white sm:p-10 lg:p-12">
+  return <main className={isSplitAuth ? 'relative isolate min-h-screen overflow-hidden bg-[#f7f7fc] px-4 py-8 text-slate-950 sm:px-6 sm:py-12' : 'min-h-screen bg-slate-50 px-4 py-10 sm:px-6'}>
+    {isSplitAuth && <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-0 overflow-hidden"><div className="absolute -right-40 -top-44 h-[34rem] w-[34rem] rounded-full bg-violet-200/50 blur-3xl" /><div className="absolute -bottom-48 -left-40 h-[30rem] w-[30rem] rounded-full bg-indigo-100/60 blur-3xl" /></div>}
+    <section className={isSplitAuth ? 'relative z-10 mx-auto grid max-w-5xl overflow-hidden rounded-[2rem] border border-white bg-white shadow-2xl shadow-indigo-950/10 lg:min-h-[680px] lg:grid-cols-[0.85fr_1.15fr]' : 'mx-auto max-w-md rounded-lg border border-slate-200 bg-white p-5 sm:p-7'}>
+      {isSplitAuth && <aside className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#211747] via-[#3b2a7a] to-violet-700 p-7 text-white sm:p-10 lg:p-12">
         <div aria-hidden="true" className="absolute -right-20 top-24 h-64 w-64 rounded-full border border-white/10" /><div aria-hidden="true" className="absolute -right-8 top-36 h-40 w-40 rounded-full border border-white/10" />
         <div className="relative"><Link href="/" className="inline-flex items-center gap-3 rounded-xl" aria-label="Brightloop home"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-2xl font-black text-violet-700">b</span><span><span className="block text-lg font-extrabold tracking-tight">brightloop</span><span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-violet-200">Subscriptions</span></span></Link></div>
-        <div className="relative my-10 lg:my-0"><p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-200">Start with clarity</p><h2 className="mt-4 max-w-sm text-3xl font-bold leading-tight tracking-tight sm:text-4xl">One account for your subscription workspace.</h2><p className="mt-5 max-w-sm text-sm leading-6 text-violet-100">Create your customer account to access the Brightloop portal and manage your subscription billing.</p>
-          <div className="mt-8 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur"><span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15 text-lg">↗</span><p className="text-sm font-medium leading-5 text-white">If accepted, an activation email will be queued for your account.</p></div>
+        <div className="relative my-10 lg:my-0"><p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-200">{isSignup ? 'Start with clarity' : 'Welcome back'}</p><h2 className="mt-4 max-w-sm text-3xl font-bold leading-tight tracking-tight sm:text-4xl">{isSignup ? 'One account for your subscription workspace.' : 'Your subscription workspace, in one place.'}</h2><p className="mt-5 max-w-sm text-sm leading-6 text-violet-100">{isSignup ? 'Create your customer account to access the Brightloop portal and manage your subscription billing.' : 'Sign in to review your subscriptions, invoices and payment activity.'}</p>
+          {isSignup ? <div className="mt-8 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur"><span aria-hidden="true" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15 text-lg">↗</span><p className="text-sm font-medium leading-5 text-white">If accepted, an activation email will be queued for your account.</p></div> : <ul className="mt-8 space-y-3">{['Subscription details', 'Invoices and due dates', 'Payment history'].map((item) => <li key={item} className="flex items-center gap-3 text-sm font-medium text-white"><span aria-hidden="true" className="grid h-6 w-6 place-items-center rounded-full bg-emerald-300/15 text-emerald-200">✓</span>{item}</li>)}</ul>}
         </div>
         <p className="relative text-xs text-violet-200">Brightloop · Subscription management</p>
       </aside>}
-      <div className={isSignup ? 'p-6 sm:p-10 lg:p-12' : ''}>
-      {!isSignup && <Link href="/" className="text-sm font-semibold text-indigo-800">Brightloop</Link>}
-      <div className={isSignup ? 'mx-auto max-w-md' : ''}>
-      <p className={isSignup ? 'text-xs font-bold uppercase tracking-[0.16em] text-violet-700' : 'sr-only'}>{isSignup ? 'Customer portal' : 'Account'}</p>
-      <h1 className={isSignup ? 'mt-2 text-3xl font-bold tracking-tight text-slate-950' : 'mt-5 text-2xl font-semibold'}>{isSignup ? 'Create your account' : title}</h1>
-      <p className={isSignup ? 'mt-2 text-sm leading-6 text-slate-600' : 'sr-only'}>{isSignup ? 'Enter your details to request a secure Brightloop customer account.' : title}</p>
+      <div className={isSplitAuth ? 'p-6 sm:p-10 lg:p-12' : ''}>
+      {!isSplitAuth && <Link href="/" className="text-sm font-semibold text-indigo-800">Brightloop</Link>}
+      <div className={isSplitAuth ? 'mx-auto max-w-md' : ''}>
+      <p className={isSplitAuth ? 'text-xs font-bold uppercase tracking-[0.16em] text-violet-700' : 'sr-only'}>{isSignup ? 'Customer portal' : 'Account access'}</p>
+      <h1 className={isSplitAuth ? 'mt-2 text-3xl font-bold tracking-tight text-slate-950' : 'mt-5 text-2xl font-semibold'}>{isSignup ? 'Create your account' : (isLogin ? 'Sign in to Brightloop' : title)}</h1>
+      <p className={isSplitAuth ? 'mt-2 text-sm leading-6 text-slate-600' : 'sr-only'}>{isSignup ? 'Enter your details to request a secure Brightloop customer account.' : (isLogin ? 'Use your email and password to continue to your workspace.' : title)}</p>
       <form className={`${isSignup ? 'mt-7' : 'mt-6'} space-y-4`} onSubmit={(event) => void submit(event)} noValidate>
         {(mode === 'signup' || mode === 'login' || mode === 'forgot') && <FormField id="email" label="Email" error={fieldErrors.email} required><Input type="email" autoComplete="email" value={values.email} onChange={update('email')} required maxLength={320} /></FormField>}
         {mode === 'signup' && <>
@@ -141,12 +143,12 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         {(mode === 'activate' || mode === 'reset') && <FormField id="token" label={mode === 'activate' ? 'Activation token' : 'Reset token'} description="Use the token from the email link." error={fieldErrors.token} required><Input value={values.token} onChange={update('token')} required minLength={20} maxLength={200} /></FormField>}
         {error && <p className="text-sm text-red-800" role="alert">{error}</p>}
         {message && <p className="text-sm text-emerald-800" role="status">{message}</p>}
-        <Button type="submit" disabled={pending || ((mode === 'signup' || mode === 'reset') && !validPassword)} className={`w-full ${isSignup ? '!min-h-12 !rounded-xl !bg-violet-600 !text-sm !font-bold !shadow-lg !shadow-violet-600/20 hover:!bg-violet-700' : ''}`}>{pending ? 'Working…' : (isSignup ? 'Create customer account' : title)}</Button>
+        <Button type="submit" disabled={pending || ((mode === 'signup' || mode === 'reset') && !validPassword)} className={`w-full ${isSplitAuth ? '!min-h-12 !rounded-xl !bg-violet-600 !text-sm !font-bold !shadow-lg !shadow-violet-600/20 hover:!bg-violet-700' : ''}`}>{pending ? 'Working…' : (isSignup ? 'Create customer account' : title)}</Button>
       </form>
-      <nav className={isSignup ? 'mt-6 text-center text-sm text-slate-600' : 'mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-indigo-800'} aria-label="Account links">
+      <nav className={isSplitAuth ? 'mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-slate-600' : 'mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-indigo-800'} aria-label="Account links">
         {mode !== 'login' && <>{isSignup && 'Already have an account? '}<Link className={isSignup ? 'font-semibold text-violet-700 hover:text-violet-900' : ''} href="/login">Sign in</Link></>}
-        {mode !== 'signup' && <Link href="/signup">Create account</Link>}
-        {mode === 'login' && <Link href="/forgot-password">Forgot password?</Link>}
+        {mode !== 'signup' && <Link className={isLogin ? 'font-semibold text-violet-700 hover:text-violet-900' : ''} href="/signup">{isLogin ? 'Create a customer account' : 'Create account'}</Link>}
+        {mode === 'login' && <Link className="font-semibold text-violet-700 hover:text-violet-900" href="/forgot-password">Forgot password?</Link>}
         {mode === 'forgot' && <Link href="/password-reset">I have a reset token</Link>}
       </nav>
       {isSignup && <p className="mt-5 text-center text-xs leading-5 text-slate-500">Account activation is completed through the email link when delivery is configured.</p>}
