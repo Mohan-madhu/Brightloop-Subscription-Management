@@ -1,0 +1,29 @@
+{
+  "name": "@brightloop/api",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Brightloop Subscription Management API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "node prisma/seed.js",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemailer": "^10.3.1"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  }
+}

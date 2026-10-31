@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: Brightloop Subscription Management API
+  version: 1.0.0
+  description: REST API for Brightloop Subscription Management System
+paths:
+  /auth/register:
+    post:
+      summary: Register a new customer
+      responses:
+        '201':
+          description: Registration successful
+  /auth/login:
+    post:
+      summary: Authenticate and obtain JWT
+      responses:
+        '200':
+          description: Login successful
+  /products:
+    get:
+      summary: List products
+      responses:
+        '200':
+          description: Product list
+    post:
+      summary: Create a product (Admin only)
+      responses:
+        '201':
+          description: Product created
+  /plans:
+    get:
+      summary: List subscription plans
+      responses:
+        '200':
+          description: Plan list
+  /quotations:
+    get:
+      summary: List quotations
+      responses:
+        '200':
+          description: Quotations list
+    post:
+      summary: Create a quotation
+      responses:
+        '201':
+          description: Quotation created
+  /subscriptions:
+    get:
+      summary: List subscriptions
+      responses:
+        '200':
+          description: Subscription list
+  /invoices:
+    get:
+      summary: List invoices
+      responses:
+        '200':
+          description: Invoice list
+  /billing/process-due:
+    post:
+      summary: Process due recurring subscriptions
+      responses:
+        '200':
+          description: Invoices generated
+  /payments:
+    post:
+      summary: Record manual payment
+      responses:
+        '201':
+          description: Payment recorded
+  /payments/razorpay/create-order:
+    post:
+      summary: Create Razorpay test order
+      responses:
+        '200':
+          description: Order created
+  /payments/razorpay/verify:
+    post:
+      summary: Verify Razorpay payment signature
+      responses:
+        '200':
+          description: Payment verified
+  /reports/dashboard:
+    get:
+      summary: Get financial dashboard summary
+      responses:
+        '200':
+          description: Dashboard metrics
