@@ -6,6 +6,7 @@ import { parsePagination } from '../../middleware/validate.js';
 import { requireAuth, requireCsrf, requireCustomerAccess, requireRole } from '../../middleware/auth.js';
 
 export const customerRouter = Router();
+const customerUpdate = z.object({ legalName: z.string().trim().min(1).max(240).optional(), billingEmail: z.string().trim().email().max(320).optional(), billingAddress: z.record(z.unknown()).nullable().optional() });
 customerRouter.get('/', requireAuth, async (req, res) => {
   const page = parsePagination(req.query, { allowedSort: ['legalName', 'createdAt'] }); const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
   const visible = req.auth.roles.includes('ADMIN') || req.auth.roles.includes('FINANCE') ? {} : req.auth.roles.includes('MARKETING') ? { assignments: { some: { userId: req.auth.userId } } } : { id: req.auth.customerId ?? '__none__' };
@@ -14,5 +15,12 @@ customerRouter.get('/', requireAuth, async (req, res) => {
   res.json({ data, pagination: { page: page.page, pageSize: page.pageSize, total, totalPages: Math.ceil(total / page.pageSize) } });
 });
 customerRouter.get('/:id', requireAuth, requireCustomerAccess, async (req, res) => { const data = await prisma.customer.findUnique({ where: { id: req.params.id }, include: { user: { select: { email: true, firstName: true, lastName: true } }, assignments: { include: { user: { select: { id: true, email: true, firstName: true, lastName: true } } } } } }); if (!data) throw new AppError(404, 'NOT_FOUND', 'Customer not found.'); res.json({ data }); });
+customerRouter.patch('/:id', requireAuth, requireCsrf, requireCustomerAccess, async (req, res) => {
+  const id = z.string().cuid().parse(req.params.id);
+  const data = customerUpdate.parse(req.body);
+  if (Object.keys(data).length === 0) throw new AppError(400, 'VALIDATION_ERROR', 'At least one customer field is required.');
+  const updated = await prisma.customer.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+  res.json({ data: updated });
+});
 customerRouter.post('/:id/assignments', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => { const customerId = z.string().cuid().parse(req.params.id); const userId = z.object({ userId: z.string().cuid() }).parse(req.body).userId; const user = await prisma.user.findUnique({ where: { id: userId } }); if (!user || user.kind !== 'STAFF') throw new AppError(400, 'VALIDATION_ERROR', 'Assignments require a staff user.'); const data = await prisma.customerAssignment.upsert({ where: { customerId_userId: { customerId, userId } }, update: {}, create: { customerId, userId } }); res.status(201).json({ data }); });
 customerRouter.delete('/:id/assignments/:userId', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => { await prisma.customerAssignment.delete({ where: { customerId_userId: { customerId: z.string().cuid().parse(req.params.id), userId: z.string().cuid().parse(req.params.userId) } } }); res.json({ data: { removed: true } }); });

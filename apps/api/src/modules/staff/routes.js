@@ -7,10 +7,22 @@ import { requireAuth, requireCsrf, requireRole } from '../../middleware/auth.js'
 import { hashToken, newToken } from '../../utils/session.js';
 import { queueEmail } from '../../services/email.js';
 import { env } from '../../config/env.js';
+import { parsePagination } from '../../middleware/validate.js';
 
 export const staffRouter = Router();
 const password = z.string().min(9).max(1024).regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9])/, 'Password must include uppercase, lowercase and special characters.');
 const inputSchema = z.object({ email: z.string().trim().email().max(320).transform((value) => value.toLowerCase()), firstName: z.string().trim().min(1).max(100), lastName: z.string().trim().max(100).optional(), password, roles: z.array(z.enum(['MARKETING', 'FINANCE'])).min(1) });
+
+staffRouter.get('/', requireAuth, requireRole('ADMIN'), async (req, res) => {
+  const { page, pageSize, skip, orderBy } = parsePagination(req.query, { allowedSort: ['email', 'createdAt', 'firstName'] });
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+  const where = { kind: 'STAFF', ...(search ? { OR: [{ email: { contains: search, mode: 'insensitive' } }, { firstName: { contains: search, mode: 'insensitive' } }, { lastName: { contains: search, mode: 'insensitive' } }] } : {}) };
+  const [data, total] = await prisma.$transaction([
+    prisma.user.findMany({ where, skip, take: pageSize, orderBy: orderBy ?? { createdAt: 'desc' }, select: { id: true, email: true, firstName: true, lastName: true, isActive: true, createdAt: true, roles: { select: { role: { select: { code: true, name: true } } } } } }),
+    prisma.user.count({ where })
+  ]);
+  res.json({ data, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
+});
 
 staffRouter.post('/', requireAuth, requireCsrf, requireRole('ADMIN'), async (req, res) => {
   const input = inputSchema.parse(req.body);
