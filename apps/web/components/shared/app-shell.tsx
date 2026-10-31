@@ -7,6 +7,23 @@ import type { SessionUser } from '../../lib/session';
 
 export type AppNavigationItem = { label: string; href: string; roles?: readonly string[] };
 
+function NavigationIcon({ href }: { href: string }) {
+  const section = href.split('/').filter(Boolean).at(-1) ?? 'overview';
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" {...common}>
+    {section === 'admin' || section === 'finance' || section === 'overview' ? <><rect x="4" y="4" width="6" height="6" rx="1.5" /><rect x="14" y="4" width="6" height="6" rx="1.5" /><rect x="4" y="14" width="6" height="6" rx="1.5" /><rect x="14" y="14" width="6" height="6" rx="1.5" /></>
+      : section === 'staff' || section === 'customers' || section === 'portal' ? <><circle cx="9" cy="8" r="3" /><path d="M3.5 19c.5-3 2.3-4.5 5.5-4.5s5 1.5 5.5 4.5M16 5.5a3 3 0 0 1 0 5.8M17 14.8c2.1.4 3.3 1.8 3.7 4.2" /></>
+      : section === 'products' ? <><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" /><path d="m4.5 7.8 7.5 4.3 7.5-4.3M12 12v8.5" /></>
+      : section === 'plans' || section === 'subscriptions' ? <><path d="M7 7h11l-2.5-2.5M17 17H6l2.5 2.5" /><path d="M18 7a7 7 0 0 1 1 8M6 17a7 7 0 0 1-1-8" /></>
+      : section === 'taxes' ? <><circle cx="7.5" cy="7.5" r="2.5" /><circle cx="16.5" cy="16.5" r="2.5" /><path d="m18 5-12 14" /></>
+      : section === 'discounts' ? <><path d="M20 13 13 20 4 11V4h7l9 9Z" /><circle cx="8" cy="8" r="1" /></>
+      : section === 'payments' ? <><rect x="3.5" y="5" width="17" height="14" rx="2.5" /><path d="M4 9h16M7 14h4" /></>
+      : section === 'kanban' ? <><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3.5v3M16 3.5v3M4 9h16M8 13h2m4 0h2m-8 3h2" /></>
+      : section === 'reports' ? <><path d="M4 20V5M4 20h16" /><path d="m7 15 4-4 3 2 5-6" /><circle cx="19" cy="7" r="1" /></>
+      : <><path d="M6 4h9l4 4v12H6z" /><path d="M14 4v5h5M9 13h7M9 17h7" /></>}
+  </svg>;
+}
+
 export function AppShell({ children, navigation, user, brand = 'Brightloop', onLogout }: {
   children: ReactNode;
   navigation: readonly AppNavigationItem[];
@@ -32,9 +49,9 @@ export function AppShell({ children, navigation, user, brand = 'Brightloop', onL
       <nav id="primary-navigation" aria-label="Primary navigation" className="flex-1 space-y-1 px-3 py-5">
         <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
         {visibleNavigation.map((item) => {
-          const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`));
+          const active = currentItem?.href === item.href;
           return <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} aria-current={active ? 'page' : undefined} className={`group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600 ${active ? 'bg-violet-50 text-violet-800' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}`}>
-            <span aria-hidden="true" className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-[11px] font-bold ${active ? 'bg-white text-violet-700 shadow-sm' : 'bg-slate-100 text-slate-500 group-hover:bg-white'}`}>{item.label.slice(0, 1)}</span>{item.label}
+            <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl transition ${active ? 'bg-white text-violet-700 shadow-sm' : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-violet-700'}`}><NavigationIcon href={item.href} /></span>{item.label}
           </Link>;
         })}
       </nav>
