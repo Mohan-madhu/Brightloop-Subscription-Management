@@ -35,7 +35,7 @@ function ActivateContent() {
     <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
       {status === 'loading' && (
         <div className="space-y-4">
-          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="text-slate-600 text-sm">Verifying your account activation token...</p>
         </div>
       )}
@@ -48,7 +48,7 @@ function ActivateContent() {
           <div className="pt-4">
             <Link
               href="/odoo/login"
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm inline-block"
+              className="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm inline-block"
             >
               Proceed to Login
             </Link>
@@ -80,7 +80,7 @@ export default function ActivatePage() {
     <div className="max-w-md mx-auto py-16 text-center space-y-6">
       <Suspense fallback={
         <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
-          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="text-slate-600 text-sm mt-3">Loading activation page...</p>
         </div>
       }>

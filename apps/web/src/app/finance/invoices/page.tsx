@@ -193,7 +193,7 @@ export default function FinanceInvoicesPage() {
         <h2 className="text-lg font-bold text-slate-900">Issued & Scheduled Invoices</h2>
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : invoices.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
@@ -344,7 +344,7 @@ export default function FinanceInvoicesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-violet-600 text-white rounded-xl text-xs font-semibold"
                 >
                   Confirm Payment
                 </button>
@@ -455,7 +455,7 @@ export default function FinanceInvoicesPage() {
               </button>
               <button
                 onClick={() => window.print()}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold flex items-center space-x-1.5"
+                className="px-4 py-2 bg-violet-600 text-white rounded-xl text-xs font-semibold flex items-center space-x-1.5"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Print Invoice</span>

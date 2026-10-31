@@ -113,7 +113,7 @@ export default function CustomerInvoicesPage() {
         <h2 className="text-lg font-bold text-slate-900">Invoices History</h2>
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : invoices.length === 0 ? (
           <div className="text-center py-8 text-slate-500 text-xs">
@@ -167,7 +167,7 @@ export default function CustomerInvoicesPage() {
                         {inv.outstandingAmount > 0 && inv.status !== 'CANCELLED' && (
                           <button
                             onClick={() => handleStartRazorpay(inv)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
+                            className="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
                           >
                             <CreditCard className="w-3.5 h-3.5" />
                             <span>Pay Now</span>
@@ -233,7 +233,7 @@ export default function CustomerInvoicesPage() {
                     type="button"
                     disabled={verifying}
                     onClick={handleSimulateRazorpaySuccess}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors flex items-center space-x-2"
+                    className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors flex items-center space-x-2"
                   >
                     {verifying ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

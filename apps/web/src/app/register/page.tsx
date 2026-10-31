@@ -50,10 +50,17 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-10">
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-6">
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold text-slate-900">Create Customer Account</h1>
+    <div className="max-w-5xl mx-auto py-6 sm:py-10">
+      <div className="grid overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-900/5 md:grid-cols-[0.8fr_1fr]">
+        <aside className="relative hidden overflow-hidden bg-slate-950 p-10 text-white md:flex md:flex-col md:justify-between">
+          <div className="absolute -right-24 -top-20 h-64 w-64 rounded-full bg-violet-600/40 blur-3xl" />
+          <div className="relative"><div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500 text-2xl font-black">b</div><p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-300">Brightloop customer portal</p><h2 className="mt-4 text-3xl font-bold leading-tight">Your subscriptions, in your hands.</h2><p className="mt-4 text-sm leading-6 text-slate-300">Create an account to review your plans, invoices and payment history from one place.</p></div>
+          <div className="relative space-y-3 text-sm text-slate-200"><p className="rounded-2xl border border-white/10 bg-white/5 p-4">View your active and past subscriptions</p><p className="rounded-2xl border border-white/10 bg-white/5 p-4">Keep track of upcoming invoice due dates</p></div>
+        </aside>
+        <div className="p-6 sm:p-10 space-y-6">
+        <div className="space-y-1">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-700">Get started</p>
+          <h1 className="text-2xl font-bold text-slate-900">Create your account</h1>
           <p className="text-sm text-slate-500">Sign up to manage your subscriptions and billing</p>
         </div>
 
@@ -82,7 +89,7 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Acme Global Corp"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -96,7 +103,7 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="contact@acmecorp.com"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -109,7 +116,7 @@ export default function RegisterPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+91 9876543210"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -123,7 +130,7 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
 
             {/* Password Complexity Checklist */}
@@ -147,7 +154,7 @@ export default function RegisterPage() {
             type="submit"
             disabled={loading || !isPassValid}
             className={`w-full py-2.5 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-2 ${
-              isPassValid && !loading ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-300 cursor-not-allowed'
+              isPassValid && !loading ? 'bg-violet-600 hover:bg-violet-700' : 'bg-slate-300 cursor-not-allowed'
             }`}
           >
             {loading ? (
@@ -163,10 +170,11 @@ export default function RegisterPage() {
 
         <div className="text-center text-xs text-slate-500">
           Already registered?{' '}
-          <Link href="/odoo/login" className="text-emerald-600 font-semibold hover:underline">
+          <Link href="/odoo/login" className="text-violet-700 font-semibold hover:underline">
             Sign In
           </Link>
         </div>
+      </div>
       </div>
     </div>
   );

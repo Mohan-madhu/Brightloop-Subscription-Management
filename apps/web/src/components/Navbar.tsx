@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, User as UserIcon, Wifi, WifiOff } from 'lucide-react';
+import { LogOut, Menu, Wifi, WifiOff } from 'lucide-react';
 
-export function Navbar() {
+export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuth();
   const [isOnline, setIsOnline] = useState(true);
 
@@ -24,22 +24,23 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="h-16 border-b border-slate-200 bg-white px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm no-print">
-      <div className="flex items-center space-x-3">
-        <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg">
-          B
+    <header className="min-h-[76px] border-b border-slate-200/80 bg-white/95 px-5 sm:px-8 flex items-center justify-between sticky top-0 z-30 backdrop-blur no-print">
+      <div className="flex min-w-0 items-center space-x-3">
+        {user && <button type="button" onClick={onMenuClick} aria-label="Open navigation" aria-controls="primary-sidebar" className="md:hidden -ml-2 rounded-xl p-2 text-slate-600 hover:bg-slate-100"><Menu className="h-5 w-5" /></button>}
+        <div className="w-10 h-10 rounded-2xl bg-violet-600 flex items-center justify-center text-white font-black text-2xl shadow-md shadow-violet-600/20">
+          b
         </div>
-        <Link href="/odoo/" className="font-bold text-xl tracking-tight text-slate-900">
-          Bright<span className="text-emerald-600">loop</span>
+        <Link href="/odoo/" className="font-extrabold text-xl tracking-tight text-slate-950">
+          brightloop
         </Link>
-        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium ml-2">
+        <span className="hidden sm:inline text-[10px] uppercase tracking-[0.18em] bg-violet-50 text-violet-700 px-2.5 py-1 rounded-full font-bold ml-2">
           Enterprise Billing
         </span>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-4">
         {/* Network & PWA Offline Indicator */}
-        <div className="flex items-center text-xs space-x-1 font-medium">
+        <div className="hidden sm:flex items-center text-xs space-x-1 font-medium">
           {isOnline ? (
             <span className="flex items-center text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
               <Wifi className="w-3.5 h-3.5 mr-1" /> Online
@@ -81,7 +82,7 @@ export function Navbar() {
             </Link>
             <Link
               href="/odoo/register"
-              className="px-3.5 py-1.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+              className="px-4 py-2.5 text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-xl transition-colors shadow-sm shadow-violet-600/20"
             >
               Get Started
             </Link>
