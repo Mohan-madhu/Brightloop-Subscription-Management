@@ -18,7 +18,7 @@ See `IMPLEMENTATION_CONTRACT.md` for paths, roles, request fields, and shared in
 
 ## Final integration verification
 
-PASS: sales acceptance now returns the existing linked subscription on a repeat request and lifecycle close transitions to `CLOSED` instead of the previously incorrect pause state. PASS: invalid lifecycle sources return `INVALID_TRANSITION`. NOT RUN: complete Admin-to-payment dashboard demo, because Vijay's invoice/payment/router and Basim/Najid frontend modules are not present in this integrated checkout.
+PASS: sales acceptance now returns the existing linked subscription on a repeat request and lifecycle close transitions to `CLOSED` instead of the previously incorrect pause state. PASS: invalid lifecycle sources return `INVALID_TRANSITION`. PASS: shared calculator returns decimal strings, applies selected discount before exclusive tax, and uses stable-ID tie-breaking. NOT RUN: complete Admin-to-payment dashboard demo, because Vijay's invoice/payment/router and Basim/Najid frontend modules are not present in this integrated checkout.
 
 ## Verification
 
@@ -30,4 +30,4 @@ NOT RUN: an authenticated browser success path requires a deliberately provision
 
 ## Remaining scope and blockers
 
-Quotation-template and staff-management endpoints are still pending. Quotation totals deliberately return no calculated amount until Vijay provides `calculateQuotationTotals`; invoice/billing/payment/report code is not implemented here. The known global tax/discount and variant-foreign-key schema gaps remain unresolved and must be approved before those capabilities are added.
+Quotation-template and staff-management endpoints are still pending. Invoice/billing/payment/report code is not implemented here. The known global tax/discount and variant-foreign-key schema gaps remain unresolved and must be approved before those capabilities are added. Sales routes do not automatically select taxes or discounts until their applicability target semantics are approved.
