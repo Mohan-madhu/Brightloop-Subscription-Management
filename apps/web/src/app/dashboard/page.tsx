@@ -55,7 +55,7 @@ export default function DashboardPage() {
     return (
       <div className="text-center py-16 space-y-4">
         <h2 className="text-xl font-bold text-slate-800">Please sign in to view your dashboard</h2>
-        <Link href="/login" className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl inline-block text-sm font-semibold">
+        <Link href="/odoo/login" className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl inline-block text-sm font-semibold">
           Sign In
         </Link>
       </div>
@@ -187,28 +187,28 @@ export default function DashboardPage() {
                   <h3 className="font-bold text-slate-900 text-sm">Workflow Navigation</h3>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <Link
-                      href="/finance/invoices"
+                      href="/odoo/finance/invoices"
                       className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 flex items-center justify-between font-medium text-slate-800"
                     >
                       <span>Invoices List</span>
                       <ArrowRight className="w-4 h-4 text-slate-400" />
                     </Link>
                     <Link
-                      href="/finance/kanban"
+                      href="/odoo/finance/kanban"
                       className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 flex items-center justify-between font-medium text-slate-800"
                     >
                       <span>Due-Date Kanban</span>
                       <ArrowRight className="w-4 h-4 text-slate-400" />
                     </Link>
                     <Link
-                      href="/admin/products"
+                      href="/odoo/admin/products"
                       className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 flex items-center justify-between font-medium text-slate-800"
                     >
                       <span>Manage Products</span>
                       <ArrowRight className="w-4 h-4 text-slate-400" />
                     </Link>
                     <Link
-                      href="/admin/staff"
+                      href="/odoo/admin/staff"
                       className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 flex items-center justify-between font-medium text-slate-800"
                     >
                       <span>Staff & Assignments</span>
@@ -234,7 +234,7 @@ export default function DashboardPage() {
               View your active Brightloop service subscriptions, billing frequencies, and renewal dates.
             </p>
             <Link
-              href="/customer/subscriptions"
+              href="/odoo/customer/subscriptions"
               className="inline-flex items-center space-x-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700"
             >
               <span>Manage Subscriptions</span>
@@ -251,7 +251,7 @@ export default function DashboardPage() {
               Review current outstanding balances, inspect historical tax snapshots, and pay online with Razorpay.
             </p>
             <Link
-              href="/customer/invoices"
+              href="/odoo/customer/invoices"
               className="inline-flex items-center space-x-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
             >
               <span>View & Pay Invoices</span>
@@ -272,7 +272,7 @@ export default function DashboardPage() {
             Create proposals from quotation templates for your assigned customers, apply discounts, and track customer acceptances.
           </p>
           <Link
-            href="/marketing/quotations"
+            href="/odoo/marketing/quotations"
             className="inline-flex items-center space-x-2 text-sm font-semibold text-purple-600 hover:text-purple-700"
           >
             <span>Open Quotation Workspace</span>

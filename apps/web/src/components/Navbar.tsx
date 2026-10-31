@@ -29,7 +29,7 @@ export function Navbar() {
         <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg">
           B
         </div>
-        <Link href="/" className="font-bold text-xl tracking-tight text-slate-900">
+        <Link href="/odoo/" className="font-bold text-xl tracking-tight text-slate-900">
           Bright<span className="text-emerald-600">loop</span>
         </Link>
         <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium ml-2">
@@ -74,13 +74,13 @@ export function Navbar() {
         ) : (
           <div className="flex items-center space-x-2">
             <Link
-              href="/login"
+              href="/odoo/login"
               className="px-3.5 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
             >
               Sign In
             </Link>
             <Link
-              href="/register"
+              href="/odoo/register"
               className="px-3.5 py-1.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
             >
               Get Started

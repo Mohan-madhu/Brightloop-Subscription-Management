@@ -35,7 +35,7 @@ export function Sidebar() {
             Overview
           </div>
           <Link
-            href="/dashboard"
+            href="/odoo/dashboard"
             className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               isActive('/dashboard') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
             }`}
@@ -53,7 +53,7 @@ export function Sidebar() {
             </div>
             <div className="space-y-1">
               <Link
-                href="/admin/products"
+                href="/odoo/admin/products"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/admin/products') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -62,7 +62,7 @@ export function Sidebar() {
                 <span>Products & Variants</span>
               </Link>
               <Link
-                href="/admin/plans"
+                href="/odoo/admin/plans"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/admin/plans') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -71,7 +71,7 @@ export function Sidebar() {
                 <span>Subscription Plans</span>
               </Link>
               <Link
-                href="/admin/staff"
+                href="/odoo/admin/staff"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/admin/staff') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -91,7 +91,7 @@ export function Sidebar() {
             </div>
             <div className="space-y-1">
               <Link
-                href="/finance/invoices"
+                href="/odoo/finance/invoices"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/finance/invoices') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -100,7 +100,7 @@ export function Sidebar() {
                 <span>Invoices & Billing</span>
               </Link>
               <Link
-                href="/finance/kanban"
+                href="/odoo/finance/kanban"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/finance/kanban') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -109,7 +109,7 @@ export function Sidebar() {
                 <span>Due-Date Kanban</span>
               </Link>
               <Link
-                href="/finance/reports"
+                href="/odoo/finance/reports"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/finance/reports') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -129,7 +129,7 @@ export function Sidebar() {
             </div>
             <div className="space-y-1">
               <Link
-                href="/marketing/quotations"
+                href="/odoo/marketing/quotations"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/marketing/quotations') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -149,7 +149,7 @@ export function Sidebar() {
             </div>
             <div className="space-y-1">
               <Link
-                href="/customer/subscriptions"
+                href="/odoo/customer/subscriptions"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/customer/subscriptions') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -158,7 +158,7 @@ export function Sidebar() {
                 <span>My Subscriptions</span>
               </Link>
               <Link
-                href="/customer/invoices"
+                href="/odoo/customer/invoices"
                 className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/customer/invoices') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
                 }`}
@@ -176,7 +176,7 @@ export function Sidebar() {
             Offline Capabilities
           </div>
           <Link
-            href="/offline-drafts"
+            href="/odoo/offline-drafts"
             className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               isActive('/offline-drafts') ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-slate-300'
             }`}
