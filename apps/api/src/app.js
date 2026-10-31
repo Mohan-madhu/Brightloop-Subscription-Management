@@ -24,7 +24,15 @@ const logger = pino({ level: process.env.LOG_LEVEL ?? 'info', redact: ['req.head
 app.disable('x-powered-by');
 app.use(pinoHttp({ logger }));
 app.use(helmet());
-app.use(cors({ origin: env.WEB_ORIGIN, methods: ['GET', 'POST', 'PATCH', 'DELETE'], credentials: true }));
+const allowedWebOrigins = new Set([env.WEB_ORIGIN, ...env.WEB_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)]);
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedWebOrigins.has(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  credentials: true,
+}));
 app.use('/api/v1/webhooks', razorpayWebhookRouter);
 app.use(express.json({ limit: '100kb' }));
 app.use('/api/v1/health', healthRouter);

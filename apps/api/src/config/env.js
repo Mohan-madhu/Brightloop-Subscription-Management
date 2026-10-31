@@ -8,6 +8,7 @@ const schema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   DATABASE_URL: z.string().url(),
   WEB_ORIGIN: z.string().url().default('http://localhost:3000'),
+  WEB_ORIGINS: z.string().default(''),
   APP_BASE_URL: z.string().url().default('http://localhost:3000'),
   AUTH_TOKEN_SECRET: z.string().min(32),
   JOBS_ENABLED: z.enum(['true', 'false']).default('false'),
