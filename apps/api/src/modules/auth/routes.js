@@ -7,6 +7,8 @@ import { AppError } from '../../middleware/errors.js';
 import { requireAuth, requireCsrf } from '../../middleware/auth.js';
 import { rateLimit } from '../../middleware/rate-limit.js';
 import { hashToken, newToken, sessionExpiry } from '../../utils/session.js';
+import { queueEmail } from '../../services/email.js';
+import { env } from '../../config/env.js';
 
 export const authRouter = Router();
 const loginSchema = z.object({ email: z.string().trim().email().max(320).transform((value) => value.toLowerCase()), password: z.string().min(1).max(1024) });
@@ -19,7 +21,9 @@ async function advisoryEmailCheck(email) {
 async function createAuthToken(tx, userId, purpose) {
   const raw = newToken(); const expiresAt = new Date(Date.now() + (purpose === 'ACTIVATION' ? 24 : 1) * 60 * 60 * 1000);
   const token = await tx.authToken.create({ data: { userId, purpose, tokenHash: hashToken(raw), expiresAt } });
-  await tx.emailOutbox.create({ data: { to: (await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true } })).email, subject: purpose === 'ACTIVATION' ? 'Activate your Brightloop account' : 'Reset your Brightloop password', body: { type: purpose, token: raw, tokenId: token.id } } });
+  const user = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { email: true, firstName: true } });
+  const activation = purpose === 'ACTIVATION';
+  await queueEmail({ to: user.email, subject: activation ? 'Activate your Brightloop account' : 'Reset your Brightloop password', template: activation ? 'activation' : 'password_reset', data: { firstName: user.firstName, expiresAt: expiresAt.toISOString(), ...(activation ? { activationUrl: `${env.APP_BASE_URL}/activate?token=${encodeURIComponent(raw)}` } : { resetUrl: `${env.APP_BASE_URL}/password-reset?token=${encodeURIComponent(raw)}` }) } }, tx);
   return token;
 }
 
