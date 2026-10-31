@@ -31,7 +31,8 @@
 
 ## Verification
 
-- Contract mappings and authorization behavior were reviewed against the fetched `BILLING_CONTRACT.md`, `IMPLEMENTATION_CONTRACT.md`, Express routes, serializers and billing access layer. This is code review, not runtime authorization testing.
-- No API/DB environment or demo session is configured in this branch. Finance/Customer API smoke tests, cross-customer UI test, invoice mutation workflows, print response, and Razorpay checkout are **NOT RUN**. Razorpay test credentials were not used.
-- Typecheck, lint and production build are **NOT RUN**: dependency installation stalled with no toolchain available (`tsc`, `eslint`, `next`). `npm ci` also warned of a damaged lockfile; installation attempts used `--package-lock=false` and did not alter the lockfile.
+- Finance/Customer route-to-contract mappings and access scoping were reviewed against the fetched `BILLING_CONTRACT.md`, `IMPLEMENTATION_CONTRACT.md`, Express routes, serializers and billing access layer. Runtime authorization is not verified.
+- Manual payment is connected to `POST /invoices/:id/payments` with method, decimal-string amount, date and note; on success the invoice is refetched. Invoice print is connected to `/invoices/:id/print?print=1` and opens the server-provided HTML for browser printing. Both are code-verified, not runtime-tested.
+- **API/browser smoke tests: NOT RUN.** No working backend/session is configured. Cross-customer isolation, mutations, print response and payment state refresh still need runtime verification. **Razorpay: NOT RUN**; test credentials and backend verification were unavailable.
+- Root `package.json` requires Node `>=20.19 <25`; machine Node is `v24.16.0`. No `.nvmrc` or `.node-version` was found. Root and workspace manifests match their lockfile entries, but root `npm ci` repeatedly warned `invalid or damaged lockfile`; one attempt failed `ENOTEMPTY` removing existing `node_modules/prisma`, offline install failed `ENOTCACHED` for `postcss`, and registry access did not complete. The lockfile was not modified or regenerated. **Typecheck: NOT RUN** (`tsc` unavailable); **lint: NOT RUN** (`eslint` unavailable); **production build: NOT RUN** (`next` unavailable).
 - No PWA, cache, online/offline indicator, quotation persistence or sync was implemented. Offline write scope remains unconfirmed.
