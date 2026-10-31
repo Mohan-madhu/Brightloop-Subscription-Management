@@ -1,32 +1,42 @@
 # Basim Frontend Handoff
 
-## Integration Status
+## Routes Implemented
 
-The API client and session adapter were aligned to the integrated auth contract. The local branch was not merged with `origin/main` or `origin/integration/mvp`: those refs track `apps/api/.env`, and this frontend-only pass avoided importing environment credentials or unrelated owner changes. Normal integration remains pending.
-
-Shared exports remain in `apps/web/components/shared/ui.tsx`, `apps/web/components/shared/app-shell.tsx`, `apps/web/lib/api.ts`, and `apps/web/lib/session.tsx`; usage is documented in `docs/FRONTEND_SHARED.md`. No Finance/Customer feature files or backend/schema files were changed.
+- Auth: `/signup`, `/activate`, `/login`, `/forgot-password`, `/password-reset`; session restoration via `/auth/me`, logout via `/auth/logout`.
+- Admin: `/admin`, `/admin/staff`, `/admin/products`, `/admin/plans`, `/admin/taxes`, `/admin/discounts`.
+- Marketing: `/marketing/customers`, `/marketing/customers/[customerId]`, `/marketing/quotations/[quotationId]`, `/marketing/subscriptions/[subscriptionId]`.
+- Shared exports remain documented in `docs/FRONTEND_SHARED.md`. Finance/Customer feature files remain Najid-owned and were not edited.
 
 ## PASS
 
-- `npm run typecheck -w @brightloop/web`: passed after the interface fixes.
-- Isolated API-client behavior test passed for `bl_csrf` cookie decoding, `X-CSRF-Token` forwarding on POST, `credentials: include`, standard `{data}` unwrapping, and 401 `ApiClientError` mapping. The test used mocked fetch and made no API requests.
-- Session adapter uses the actual `GET /api/v1/auth/me` payload (`userId`, `kind`, `roles`, `customerId`), maps 401 to unauthenticated, and calls `POST /api/v1/auth/logout`; logout receives the CSRF header from the readable cookie.
+- Published `origin/integration/mvp` was merged without unresolved conflicts. Its newly introduced `apps/api/.env` was excluded from the merge result; the path remains in the already-published ancestor history and credentials must be rotated/removed by the repository owner.
+- `npm run typecheck -w @brightloop/web`: passed after route integration and final form guards.
+- Isolated API-client test passed for `bl_csrf` decoding, mutation `X-CSRF-Token`, credentials, `{data}` unwrapping, and 401 mapping. It used mocked fetch only.
+- Forms use the actual backend methods/paths and decimal string fields. Session identity projects only `userId`, `kind`, `roles`, and `customerId`; guarded routes redirect unauthenticated users to login and restrict role navigation.
+- Mutations prevent duplicate submissions and refresh affected API reads. Validation details are shown when the API returns field paths.
 
 ## FAIL
 
-- `npm run lint -w @brightloop/web`: ESLint cannot load `es-abstract/2024/AddEntriesFromIterable` from the installed `eslint-plugin-react` dependency tree.
-- `npm run build -w @brightloop/web`: Tailwind compilation fails because the installed `lightningcss` package lacks `lightningcss.darwin-arm64.node`. Next.js also warns it selected `/Users/basimm/package-lock.json` as workspace root due to multiple lockfiles.
+- `npm run lint -w @brightloop/web`: ESLint cannot load `es-abstract/2024/AddEntriesFromIterable` through the installed `eslint-plugin-react` dependency tree.
+- `npm run build -w @brightloop/web`: Tailwind compilation cannot load `lightningcss.darwin-arm64.node`. Next.js also warns it selected `/Users/basimm/package-lock.json` as workspace root because multiple lockfiles exist.
 
 ## NOT RUN
 
-- Browser desktop/mobile smoke test and real auth/API integration: not run. The current feature branch has no auth, Admin, or Marketing page routes, and no explicitly provisioned disposable demo fixture was provided. No signup email, account mutation, invoice generation, billing job, or payment was triggered.
-- Admin setup through updated dashboard and duplicate-billing demonstration: not run; requires integrated frontend routes, a safe demo database/fixture, and the other owners' backend changes.
+- API `GET /api/v1/health/live` at localhost:4000 and web GET at localhost:3000 both returned connection failure (HTTP 000). Authenticated API/browser smoke tests were therefore not run; no demo fixture or safe test DB was confirmed.
+- Signup, activation email delivery, staff activation, Admin mutations, quotations, conversion, subscription lifecycle, dashboard, invoice, billing duplicate-run and payment flows were not executed live. No email, database mutation, billing job, invoice, or payment was triggered.
+- Desktop/mobile browser checks were not run because the web runtime could not build/start.
 
-## Cross-Owner Interface Blockers
+## Backend Mismatches and Blockers
 
-- **Variant API status/path:** `docs/IMPLEMENTATION_CONTRACT.md` marks variant writes planned as `POST/PATCH /catalog/products/:id/variants/:variantId?`; `docs/HANDOFF_MOHAN.md` says variant reads/writes are implemented; the integrated `apps/api/src/modules/catalog/routes.js` currently exposes only `POST /api/v1/catalog/products/:id/variants` and no variant PATCH or GET-by-product route. Mohan should reconcile the contract/handoff and publish the supported read/update operations before an Admin variant editor is wired.
-- **Catalog list pagination:** the contract says all list routes accept pagination, but `GET /api/v1/catalog/plans`, `/taxes`, and Admin `/discounts` in `apps/api/src/modules/catalog/routes.js` return plain arrays without pagination. Align those endpoints or explicitly document them as bounded, non-paginated lists before list screens depend on `apiListRequest`.
-- **Pending assigned scope:** staff creation/role assignment and quotation-template endpoints are explicitly pending in the implementation contract and Mohan handoff. Auth/Admin/Marketing pages are not present in this checkout, so no UI success is claimed.
-- **Integration secret:** `apps/api/.env` is tracked on the integrated refs. Remove it from version control and rotate any committed credentials before merging or opening a branch that inherits that history.
+- **Quotation templates:** the contract marks `GET/POST/PATCH /quotation-templates` planned, and no route exists. Marketing UI accepts editable lines and creates a quotation using `POST /api/v1/quotations`; template selection remains unavailable.
+- **Quotation totals/history:** `POST /api/v1/quotations` stores caller-supplied line `unitPrice` strings; `GET /api/v1/quotations/:id` returns lines/status but no server-calculated total or status logs. The UI shows no calculated total and does not fabricate history.
+- **Customer subscription history:** `GET /api/v1/customers/:id` returns customer/user/assignments only; no customer-scoped subscription list route exists. A subscription can be opened from conversion output, but a full history list is unavailable.
+- **Plan intervals:** `GET /api/v1/public/billing-intervals` returns code/name/unit/count, not the interval ID required by plan writes. `GET /api/v1/catalog/plans` reveals IDs only when plans already exist. With no existing plan, plan creation is disabled until an interval-ID listing/admin contract exists.
+- **Catalog pagination:** `GET /api/v1/catalog/plans`, `/taxes`, and `/discounts` return plain arrays, contrary to the contract's paginated-list convention. The UI consumes these actual arrays and labels the limitation.
+- **Tax applicability:** `POST/PATCH /api/v1/catalog/taxes` accepts name/rate/taxExclusive/active only; it has no target mapping fields despite schema applicability models.
+- **Variant methods:** contract marks variant writes planned at `POST/PATCH /catalog/products/:id/variants/:variantId?`; Mohan's handoff calls them implemented; actual `apps/api/src/modules/catalog/routes.js` exposes only `POST /catalog/products/:id/variants`. Variant creation works contractually; edit/read endpoints are absent.
+- **Staff status:** the contract says staff creation is planned, but the integrated API mounts `POST /api/v1/staff` and accepts email, firstName, optional lastName, password and roles limited to `MARKETING`/`FINANCE`. UI uses that implemented route. No staff list/edit/role-update endpoint exists.
+- **Next-period changes:** no subscription line quantity/add-on mutation endpoint or effective-date response exists. The detail page explains this and offers no unsupported mutation.
+- **Lifecycle permissions/effective boundary:** `/api/v1/subscriptions/:id/actions` accepts ACTIVATE/PAUSE/RESUME/CLOSE and returns a subscription, but no effective-at date is returned. The UI follows plan flags and current status; server remains authoritative.
 
-No endpoint paths, request schemas, client-side money totals, or success placeholders were invented. The pre-existing `package-lock.json` modification was not staged or changed.
+Integration merge: `05c6e66`. The pre-existing `package-lock.json` edit was restored after the merge and remains uncommitted; its named stash backup is retained. No backend implementation or schema was authored in this pass.

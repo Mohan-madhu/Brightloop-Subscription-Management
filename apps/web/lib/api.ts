@@ -71,6 +71,7 @@ async function requestEnvelope<T>(path: string, options: ApiRequestOptions = {})
 
 	const payload: unknown = await response.json().catch(() => null);
 	if (!response.ok) {
+		if (response.status === 401 && typeof window !== 'undefined') window.dispatchEvent(new Event('brightloop:unauthenticated'));
 		const error = isRecord(payload) && isRecord(payload.error) ? payload.error : undefined;
 		throw new ApiClientError(
 			typeof error?.message === 'string' ? error.message : 'The request could not be completed.',
