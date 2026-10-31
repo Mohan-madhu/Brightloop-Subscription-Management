@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { parsePagination } from '../../middleware/validate.js';
 import { AppError } from '../../middleware/errors.js';
 import { requireActor, requireRoles, ROLE } from '../billing/access.js';
-import { assertDateRange, optionalDate, optionalText } from '../billing/validation.js';
+import { assertDateRange, assertValidId, optionalDate, optionalText } from '../billing/validation.js';
 import { listPayments, recordManualPayment, MANUAL_PAYMENT_METHODS } from '../../services/payments.js';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../../services/razorpay.js';
 
@@ -22,11 +22,13 @@ const verifySchema = z.object({
 export const invoicePaymentsRouter = Router();
 invoicePaymentsRouter.use(requireActor);
 
+// POST /invoices/:id/payments: Record manual payment, recalculate balance, update status
 invoicePaymentsRouter.post('/:id/payments', requireRoles(ROLE.ADMIN, ROLE.FINANCE), async (req, res) => {
+  const invoiceId = assertValidId(req.params.id, 'invoiceId');
   const body = manualPaymentSchema.parse(req.body ?? {});
   if (Number(body.amount) <= 0) throw new AppError(400, 'VALIDATION_ERROR', 'amount must be greater than zero.');
   const result = await recordManualPayment({
-    invoiceId: req.params.id,
+    invoiceId,
     method: body.method,
     amount: body.amount,
     paidAt: new Date(body.paidAt),
@@ -36,14 +38,17 @@ invoicePaymentsRouter.post('/:id/payments', requireRoles(ROLE.ADMIN, ROLE.FINANC
   return res.status(201).json(result);
 });
 
+// POST /invoices/:id/razorpay/order: Generate secure Razorpay test order for outstanding balance
 invoicePaymentsRouter.post('/:id/razorpay/order', async (req, res) => {
-  const result = await createRazorpayOrder({ invoiceId: req.params.id, actor: req.auth });
+  const invoiceId = assertValidId(req.params.id, 'invoiceId');
+  const result = await createRazorpayOrder({ invoiceId, actor: req.auth });
   return res.status(201).json(result);
 });
 
 export const paymentsRouter = Router();
 paymentsRouter.use(requireActor);
 
+// GET /payments: Scoped payment history listing
 paymentsRouter.get('/', async (req, res) => {
   const { page, pageSize, skip, orderBy } = parsePagination(req.query, {
     allowedSort: ['paidAt', 'createdAt', 'amount']
@@ -57,6 +62,7 @@ paymentsRouter.get('/', async (req, res) => {
     throw new AppError(400, 'VALIDATION_ERROR', 'Unsupported payment method filter.');
   }
   const invoiceId = optionalText(req.query, 'invoiceId', 50);
+  if (invoiceId) assertValidId(invoiceId, 'invoiceId');
   const providerPaymentId = optionalText(req.query, 'providerPaymentId', 100);
   const search = optionalText(req.query, 'search', 100);
   const paidFrom = optionalDate(req.query, 'paidFrom');
@@ -74,6 +80,7 @@ paymentsRouter.get('/', async (req, res) => {
   return res.json(result);
 });
 
+// POST /payments/razorpay/verify: Re-fetch provider payment from Razorpay API and apply confirmation
 paymentsRouter.post('/razorpay/verify', async (req, res) => {
   const body = verifySchema.parse(req.body ?? {});
   const result = await verifyRazorpayPayment({ actor: req.auth, paymentId: body.paymentId, orderId: body.orderId });

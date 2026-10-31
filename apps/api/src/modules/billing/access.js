@@ -39,6 +39,10 @@ export function isStaff(actor) {
   return hasAnyRole(actor, [ROLE.ADMIN, ROLE.FINANCE, ROLE.MARKETING]);
 }
 
+/**
+ * Defensive authentication check: ensures the request has an authenticated actor
+ * with at least one active, normalized role. Fails closed with 401/403.
+ */
 export function requireActor(req, _res, next) {
   if (!req.auth?.userId || !Array.isArray(req.auth.roles)) {
     return next(new AppError(401, 'AUTH_REQUIRED', 'Authentication is required.'));
@@ -48,6 +52,10 @@ export function requireActor(req, _res, next) {
   return next();
 }
 
+/**
+ * Role-Based Access Control (RBAC) guard: ensures the authenticated actor
+ * possesses at least one of the specified roles.
+ */
 export function requireRoles(...allowed) {
   const normalized = allowed.map((role) => String(role).toUpperCase());
   return (req, _res, next) => {
