@@ -14,6 +14,8 @@ Branch: `mohan/saas-ui-polish`
 - PASS — `npm run build -w @brightloop/web`
 - PASS — Next.js generated all 24 application routes.
 - PASS — TypeScript validity completed during the production build.
+- PASS — `npm run typecheck -w @brightloop/web`.
+- PASS — Customer portal subscription list and subscription action controls use real paginated APIs.
 - NOT RUN — Browser screenshots at 390px, 768px and 1440px.
 - NOT RUN — Keyboard focus-trap audit for dialogs and mobile drawer.
 - FAIL/WARNING — Existing ESLint dependency resolution warning: `es-abstract/2024/AddEntriesFromIterable`.
