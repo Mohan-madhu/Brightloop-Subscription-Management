@@ -30,7 +30,7 @@ All list routes accept `page`, `pageSize`, `search`, `sortBy`, and `sortOrder`; 
 | PLANNED | `POST/PATCH /catalog/products/:id?` | Admin | product fields, decimal prices as strings |
 | PLANNED | `POST/PATCH /catalog/products/:id/variants/:variantId?` | Admin | `{sku?,priceAdjustment,attributes[]}` |
 | PLANNED | `GET/POST/PATCH /catalog/plans` | authenticated/Admin write | plan and `products[]` with `isAddon`/price |
-| PLANNED | `GET/POST/PATCH /catalog/taxes`, `/catalog/discounts` | authenticated/Admin write | configuration only |
+| IMPLEMENTED | `GET/POST/PATCH /catalog/taxes`, `/catalog/discounts` | authenticated/Admin write | configuration only; targets limited to schema-supported product/variant/plan |
 | IMPLEMENTED | `GET /customers`, `GET /customers/:id` | Admin/Finance; Marketing assigned; Customer self | customer fields |
 | IMPLEMENTED | `POST /customers/:id/assignments` | Admin | `{userId}` |
 | PLANNED | `GET/POST/PATCH /quotation-templates` | authenticated/Admin write | template lines and terms |
