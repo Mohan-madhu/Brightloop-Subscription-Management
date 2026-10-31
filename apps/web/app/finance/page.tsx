@@ -1,2 +1,2 @@
-import { NajidFeaturePending } from '../../features/najid/contract-pending';
-export default function FinancePage() { return <NajidFeaturePending area="Finance" page="Dashboard" dependencies={["Vijay: reporting API for active subscriptions, invoiced totals, verified collections, balances, overdue totals and date filters.", "Basim: shared navigation/layout and authenticated API client/session."]} />; }
+import { FinanceDashboardPage } from '../../features/najid/pages';
+export default function Page() { return <FinanceDashboardPage />; }

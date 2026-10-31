@@ -1,2 +1,2 @@
-import { NajidFeaturePending } from '../../../../features/najid/contract-pending';
-export default async function CustomerInvoiceDetailPage({ params }: { params: Promise<{ invoiceId: string }> }) { const { invoiceId } = await params; return <NajidFeaturePending area="Customer" page={`Invoice ${invoiceId}`} dependencies={["Vijay: invoice detail and verified payment-status contract.", "Mohan: authenticated own-customer invoice scoping.", "Basim: shared session and API client."]} />; }
+import { CustomerInvoiceDetailPage } from '../../../../features/najid/pages';
+export default function Page() { return <CustomerInvoiceDetailPage />; }
