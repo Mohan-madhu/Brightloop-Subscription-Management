@@ -1,0 +1,4 @@
+import Link from 'next/link';
+export default function AdminHome() {
+  return <><header className="mb-6"><p className="text-sm font-medium text-indigo-800">Administration</p><h1 className="mt-1 text-2xl font-semibold">Workspace setup</h1></header><nav aria-label="Admin sections" className="grid gap-3 sm:grid-cols-2">{[['Staff access', '/admin/staff'], ['Products and variants', '/admin/products'], ['Plans and add-ons', '/admin/plans'], ['Tax rules', '/admin/taxes'], ['Discounts', '/admin/discounts']].map(([label, href]) => <Link key={href} href={href} className="min-h-16 rounded-md border border-slate-200 bg-white p-4 font-medium text-indigo-800 hover:bg-slate-50">{label}</Link>)}</nav></>;
+}
