@@ -50,3 +50,14 @@ export function bodyNote(value) {
   if (typeof value !== 'string' || value.length > 500) throw new AppError(400, 'VALIDATION_ERROR', 'note must be a string of at most 500 characters.');
   return value.trim() || null;
 }
+
+/**
+ * Defensive parameter validation: verifies entity IDs conform to safe alphanumeric/dash/underscore
+ * formats within bounded length limits, preventing path injection, null-byte attacks, or parameter tampering.
+ */
+export function assertValidId(id, label = 'id') {
+  if (!id || typeof id !== 'string' || id.length > 50 || !/^[A-Za-z0-9_\-]+$/.test(id)) {
+    throw new AppError(400, 'VALIDATION_ERROR', `Invalid ${label} format.`);
+  }
+  return id;
+}

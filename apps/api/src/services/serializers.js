@@ -54,6 +54,7 @@ export function serializePayment(payment) {
     paidAt: serialiseValue(payment.paidAt),
     note: payment.note,
     providerPaymentId: payment.providerPaymentId,
+    reference: payment.providerPaymentId ?? payment.id,
     status: payment.status,
     createdAt: serialiseValue(payment.createdAt),
     logs: (payment.logs ?? []).map((log) => ({
@@ -71,6 +72,8 @@ export function serializeInvoiceSummary(invoice, today = todayInBillingZone()) {
     number: invoice.number,
     customerId: invoice.customerId,
     customerName: invoice.customerSnapshot?.legalName ?? invoice.customer?.legalName ?? null,
+    customerEmail: invoice.customerSnapshot?.billingEmail ?? invoice.customer?.billingEmail ?? null,
+    issueDate: dateOnly(invoice.createdAt),
     status: invoice.status,
     overdue: isOverdue(invoice, today),
     currency: invoice.currency,
@@ -90,8 +93,11 @@ export function serializeInvoiceSummary(invoice, today = todayInBillingZone()) {
 }
 
 export function serializeInvoice(invoice, today = todayInBillingZone()) {
+  const summary = serializeInvoiceSummary(invoice, today);
+  const snapshot = invoice.customerSnapshot ?? {};
   return {
-    ...serializeInvoiceSummary(invoice, today),
+    ...summary,
+    customerAddress: typeof snapshot.billingAddress === 'string' ? snapshot.billingAddress : (snapshot.billingAddress ? JSON.stringify(snapshot.billingAddress) : (invoice.customer?.billingAddress ? (typeof invoice.customer.billingAddress === 'string' ? invoice.customer.billingAddress : JSON.stringify(invoice.customer.billingAddress)) : null)),
     customerSnapshot: serialiseValue(invoice.customerSnapshot),
     discountSnapshot: serialiseValue(invoice.discountSnapshot),
     subtotal: moneyString(invoice.subtotal),
@@ -105,6 +111,11 @@ export function serializeInvoice(invoice, today = todayInBillingZone()) {
       status: log.status,
       note: log.note,
       createdAt: serialiseValue(log.createdAt)
+    })),
+    history: (invoice.logs ?? []).map((log) => ({
+      status: log.status,
+      at: serialiseValue(log.createdAt),
+      note: log.note
     })),
     payments: (invoice.payments ?? []).map(serializePayment),
     orders: (invoice.orders ?? []).map((order) => ({

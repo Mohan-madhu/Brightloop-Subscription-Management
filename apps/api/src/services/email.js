@@ -158,6 +158,10 @@ function safeAttachmentName(name) {
   return String(name ?? 'attachment').replace(/[^\w.\-]+/g, '_');
 }
 
+/**
+ * Constructs a MIME multipart message with alternative plain-text/HTML parts and optional attachments.
+ * Sanitizes headers to prevent CRLF injection, encodes non-ASCII subjects, and performs dot-stuffing for SMTP.
+ */
 export function buildMimeMessage({ from, to, subject, text, html, attachments = [] }) {
   const boundary = `brightloop_${randomBytes(12).toString('hex')}`;
   const altBoundary = `brightloop_alt_${randomBytes(12).toString('hex')}`;

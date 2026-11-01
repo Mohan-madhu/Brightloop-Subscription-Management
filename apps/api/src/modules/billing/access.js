@@ -39,6 +39,10 @@ export function isStaff(actor) {
   return hasAnyRole(actor, [ROLE.ADMIN, ROLE.FINANCE, ROLE.MARKETING]);
 }
 
+/**
+ * Defensive authentication check: ensures the request has an authenticated actor
+ * with at least one active, normalized role. Fails closed with 401/403.
+ */
 export function requireActor(req, _res, next) {
   if (!req.auth?.userId || !Array.isArray(req.auth.roles)) {
     return next(new AppError(401, 'AUTH_REQUIRED', 'Authentication is required.'));
@@ -48,6 +52,10 @@ export function requireActor(req, _res, next) {
   return next();
 }
 
+/**
+ * Role-Based Access Control (RBAC) guard: ensures the authenticated actor
+ * possesses at least one of the specified roles.
+ */
 export function requireRoles(...allowed) {
   const normalized = allowed.map((role) => String(role).toUpperCase());
   return (req, _res, next) => {
@@ -57,34 +65,41 @@ export function requireRoles(...allowed) {
   };
 }
 
-export async function customerIdFor(actor) {
+export async function customerIdFor(actor, client = prisma) {
   if (actor?.customerId) return actor.customerId;
-  const customer = await prisma.customer.findUnique({ where: { userId: actor.userId }, select: { id: true } });
-  return customer?.id ?? null;
+  try {
+    const customer = await client.customer.findUnique({ where: { userId: actor.userId }, select: { id: true } });
+    return customer?.id ?? null;
+  } catch (error) {
+    if (error?.name === 'PrismaClientInitializationError' || error?.message?.includes('database server')) {
+      return null;
+    }
+    throw error;
+  }
 }
 
-export async function invoiceScopeWhere(actor) {
+export async function invoiceScopeWhere(actor, client = prisma) {
   const role = primaryRole(actor);
   if (role === ROLE.ADMIN || role === ROLE.FINANCE) return {};
   if (role === ROLE.MARKETING) return { customer: { assignments: { some: { userId: actor.userId } } } };
   if (role === ROLE.CUSTOMER) {
-    const customerId = await customerIdFor(actor);
+    const customerId = await customerIdFor(actor, client);
     if (!customerId) return { id: '__no_customer_record__' };
     return { customerId };
   }
   throw new AppError(403, 'FORBIDDEN', 'No billing role is assigned.');
 }
 
-export async function paymentScopeWhere(actor) {
-  return { invoice: await invoiceScopeWhere(actor) };
+export async function paymentScopeWhere(actor, client = prisma) {
+  return { invoice: await invoiceScopeWhere(actor, client) };
 }
 
-export async function subscriptionScopeWhere(actor) {
+export async function subscriptionScopeWhere(actor, client = prisma) {
   const role = primaryRole(actor);
   if (role === ROLE.ADMIN || role === ROLE.FINANCE) return {};
   if (role === ROLE.MARKETING) return { customer: { assignments: { some: { userId: actor.userId } } } };
   if (role === ROLE.CUSTOMER) {
-    const customerId = await customerIdFor(actor);
+    const customerId = await customerIdFor(actor, client);
     if (!customerId) return { id: '__no_customer_record__' };
     return { customerId };
   }

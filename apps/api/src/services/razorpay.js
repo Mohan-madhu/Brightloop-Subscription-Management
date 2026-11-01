@@ -215,7 +215,7 @@ async function processPaymentEvent(tx, event, eventName) {
 
 async function recordWebhookEvent({ rawBody, event, eventId, source }) {
   const providerEventId = eventId || createHash('sha256').update(rawBody).digest('hex');
-  const existing = await prisma.webhookEvent.findUnique({ where: { provider_providerEventId: { provider: PROVIDER, providerEventId } } });
+  const existing = await prisma.webhookEvent.findUnique({ where: { providerEventId } });
   if (existing?.processedAt) return { duplicate: true, result: { processed: true, reason: 'DUPLICATE_EVENT' } };
 
   let webhook = existing;
@@ -226,7 +226,7 @@ async function recordWebhookEvent({ rawBody, event, eventId, source }) {
       });
     } catch (error) {
       if (error?.code !== 'P2002') throw error;
-      webhook = await prisma.webhookEvent.findUnique({ where: { provider_providerEventId: { provider: PROVIDER, providerEventId } } });
+      webhook = await prisma.webhookEvent.findUnique({ where: { providerEventId } });
       if (!webhook) throw error;
     }
   }
@@ -252,6 +252,11 @@ async function recordWebhookEvent({ rawBody, event, eventId, source }) {
   });
 }
 
+/**
+ * Verifies and processes an incoming Razorpay webhook.
+ * Enforces raw body presence, validates HMAC-SHA256 signature in constant time,
+ * deduplicates incoming webhook events using providerEventId, and updates invoice balances atomically.
+ */
 export async function processRazorpayWebhook({ rawBody, signature, eventId }) {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret) throw new AppError(503, 'PAYMENT_PROVIDER_NOT_CONFIGURED', 'RAZORPAY_WEBHOOK_SECRET is not configured.');

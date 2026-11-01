@@ -13,6 +13,11 @@ function paymentInclude() {
   return { logs: { orderBy: { createdAt: 'asc' } }, invoice: { select: { id: true, number: true } } };
 }
 
+/**
+ * Records a manual payment against an open invoice within a database transaction.
+ * Acquires a SELECT ... FOR UPDATE row lock on the invoice to eliminate concurrent double-payment races,
+ * recalculates remaining balance, records status logs, and updates invoice status (PARTIALLY_PAID / PAID).
+ */
 export async function recordManualPayment({ invoiceId, method, amount, paidAt, note = null, actor }) {
   const paymentAmount = roundMoney(amount);
   if (paymentAmount.lte(0)) throw new AppError(400, 'VALIDATION_ERROR', 'Payment amount must be greater than zero.');

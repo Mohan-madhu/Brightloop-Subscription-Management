@@ -1,0 +1,149 @@
+/**
+ * Comprehensive enterprise invoice scenarios dataset.
+ * Contains 100 deterministic invoice fixtures across all lifecycles,
+ * currencies, tax variations, discounts, and payment allocations.
+ */
+
+import { generateTestCustomers, DEMO_PLANS, TAX_MATRIX } from './billing-fixtures.js';
+
+export function buildInvoiceScenarios(count = 100) {
+  const customers = generateTestCustomers(count);
+  const statuses = ['DRAFT', 'CONFIRMED', 'SENT', 'PARTIALLY_PAID', 'PAID', 'CANCELLED'];
+  const scenarios = [];
+
+  for (let i = 1; i <= count; i += 1) {
+    const customer = customers[i - 1];
+    const plan = DEMO_PLANS[(i - 1) % DEMO_PLANS.length];
+    const status = statuses[(i - 1) % statuses.length];
+    const year = 2026;
+    const month = ((i - 1) % 12) + 1;
+    const monthStr = String(month).padStart(2, '0');
+    const startDay = '01';
+    const endDay = month === 2 ? '28' : [4, 6, 9, 11].includes(month) ? '30' : '31';
+    const dueDay = String(Math.min(15 + (i % 10), 28)).padStart(2, '0');
+
+    const startDate = `${year}-${monthStr}-${startDay}`;
+    const endDate = `${year}-${monthStr}-${endDay}`;
+    const dueDate = `${year}-${monthStr}-${dueDay}`;
+    const invoiceNumber = `INV-${year}${monthStr}${startDay}-SUB${String(i).padStart(4, '0')}`;
+
+    const unitPriceNum = Number(plan.price);
+    const qty = (i % 3) + 1;
+    const subtotalNum = unitPriceNum * qty;
+    const discountAmountNum = i % 4 === 0 ? Math.round(subtotalNum * 0.1) : 0;
+    const taxableNum = subtotalNum - discountAmountNum;
+    const taxRateNum = 18;
+    const taxTotalNum = Math.round(taxableNum * 0.18 * 100) / 100;
+    const totalNum = Math.round((taxableNum + taxTotalNum) * 100) / 100;
+
+    let balanceNum = totalNum;
+    const payments = [];
+
+    if (status === 'PAID') {
+      balanceNum = 0;
+      payments.push({
+        id: `pay_${invoiceNumber}_1`,
+        invoiceId: `inv_${String(i).padStart(4, '0')}`,
+        method: i % 2 === 0 ? 'RAZORPAY_UPI' : 'BANK_TRANSFER',
+        amount: totalNum.toFixed(2),
+        paidAt: `${year}-${monthStr}-10T10:00:00.000Z`,
+        note: 'Full settlement',
+        providerPaymentId: i % 2 === 0 ? `pay_rzp_${i}` : null,
+        status: 'CONFIRMED',
+        createdAt: `${year}-${monthStr}-10T10:00:00.000Z`
+      });
+    } else if (status === 'PARTIALLY_PAID') {
+      const part = Math.round(totalNum * 0.4 * 100) / 100;
+      balanceNum = Math.round((totalNum - part) * 100) / 100;
+      payments.push({
+        id: `pay_${invoiceNumber}_1`,
+        invoiceId: `inv_${String(i).padStart(4, '0')}`,
+        method: 'RAZORPAY_CARD',
+        amount: part.toFixed(2),
+        paidAt: `${year}-${monthStr}-05T14:30:00.000Z`,
+        note: 'Partial payment',
+        providerPaymentId: `pay_rzp_part_${i}`,
+        status: 'CONFIRMED',
+        createdAt: `${year}-${monthStr}-05T14:30:00.000Z`
+      });
+    }
+
+    scenarios.push({
+      id: `inv_${String(i).padStart(4, '0')}`,
+      number: invoiceNumber,
+      customerId: customer.id,
+      customerSnapshot: {
+        customerId: customer.id,
+        legalName: customer.legalName,
+        billingEmail: customer.billingEmail,
+        billingAddress: customer.billingAddress
+      },
+      billingPeriodId: `bp_${String(i).padStart(4, '0')}`,
+      billingPeriod: {
+        id: `bp_${String(i).padStart(4, '0')}`,
+        subscriptionId: `sub_${String(i).padStart(4, '0')}`,
+        startsAt: new Date(`${startDate}T00:00:00.000Z`),
+        endsAt: new Date(`${endDate}T00:00:00.000Z`),
+        dueAt: new Date(`${dueDate}T00:00:00.000Z`),
+        subscription: {
+          id: `sub_${String(i).padStart(4, '0')}`,
+          number: `SUB-${String(i).padStart(4, '0')}`,
+          planId: plan.id,
+          status: 'ACTIVE'
+        }
+      },
+      status,
+      currency: 'INR',
+      dueDate: new Date(`${dueDate}T00:00:00.000Z`),
+      subtotal: subtotalNum.toFixed(2),
+      discountTotal: discountAmountNum.toFixed(2),
+      taxTotal: taxTotalNum.toFixed(2),
+      total: totalNum.toFixed(2),
+      balance: balanceNum.toFixed(2),
+      version: 1,
+      createdAt: new Date(`${startDate}T00:00:00.000Z`),
+      updatedAt: new Date(`${startDate}T12:00:00.000Z`),
+      lines: [
+        {
+          id: `line_${invoiceNumber}_1`,
+          description: `${plan.name} (Qty ${qty})`,
+          quantity: qty,
+          unitPrice: unitPriceNum.toFixed(2),
+          discountAmount: discountAmountNum.toFixed(2),
+          lineTotal: taxableNum.toFixed(2),
+          snapshot: {
+            productId: plan.products[0].productId,
+            isAddon: false,
+            baseAmount: subtotalNum.toFixed(2),
+            taxTotal: taxTotalNum.toFixed(2)
+          },
+          taxes: [
+            { id: `tax_${i}_1`, name: 'CGST 9%', rate: '9.00', amount: (taxTotalNum / 2).toFixed(2) },
+            { id: `tax_${i}_2`, name: 'SGST 9%', rate: '9.00', amount: (taxTotalNum / 2).toFixed(2) }
+          ]
+        }
+      ],
+      logs: [
+        { id: `log_${i}_1`, status: 'DRAFT', note: 'Invoice generated by billing service.', createdAt: new Date(`${startDate}T00:00:00.000Z`) },
+        ...(status !== 'DRAFT' ? [{ id: `log_${i}_2`, status: 'CONFIRMED', note: 'Draft invoice confirmed.', createdAt: new Date(`${startDate}T01:00:00.000Z`) }] : []),
+        ...(['SENT', 'PARTIALLY_PAID', 'PAID'].includes(status) ? [{ id: `log_${i}_3`, status: 'SENT', note: 'Invoice dispatched to customer.', createdAt: new Date(`${startDate}T02:00:00.000Z`) }] : []),
+        ...(status === 'CANCELLED' ? [{ id: `log_${i}_4`, status: 'CANCELLED', note: 'Cancelled prior to payment.', createdAt: new Date(`${startDate}T03:00:00.000Z`) }] : [])
+      ],
+      payments,
+      orders: i % 2 === 0 ? [
+        {
+          id: `ord_${i}`,
+          provider: 'RAZORPAY',
+          providerOrderId: `order_rzp_${invoiceNumber}`,
+          amount: totalNum.toFixed(2),
+          currency: 'INR',
+          createdAt: new Date(`${startDate}T01:30:00.000Z`)
+        }
+      ] : []
+    });
+  }
+
+  return scenarios;
+}
+
+export const INVOICE_SCENARIOS = Object.freeze(buildInvoiceScenarios(100));

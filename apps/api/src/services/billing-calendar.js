@@ -52,6 +52,11 @@ export function daysInMonth(year, monthIndex) {
   return new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
 }
 
+/**
+ * Adds months to a calendar date while strictly preserving the subscription's original anchor day.
+ * If a target month has fewer days than anchorDay (e.g. Feb 28/29), clamps to the month-end,
+ * and restores to the original anchor day in subsequent months (e.g. March 31).
+ */
 export function addMonthsAnchored(dateValue, months, anchorDay) {
   const date = parseDateOnly(dateValue);
   const targetMonth = date.getUTCMonth() + months;
