@@ -43,6 +43,7 @@ async function claimRun(periodKey, now) {
       OR: [
         { status: 'QUEUED' },
         { status: 'FAILED' },
+        { status: 'RUNNING', startedAt: null },
         { status: 'RUNNING', startedAt: { lt: staleBefore } }
       ]
     },
@@ -156,8 +157,20 @@ export function serializeReportRun(run) {
     startedAt: run.startedAt?.toISOString() ?? null,
     completedAt: run.completedAt?.toISOString() ?? null,
     createdAt: run.createdAt?.toISOString() ?? null,
-    downloadAvailable: run.status === 'COMPLETED',
+    downloadAvailable: run.status === 'COMPLETED' && Boolean(run.metadata?.summary),
     metadata: run.metadata ?? null
+  };
+}
+
+export async function getQuarterlyReportCsv({ reportId }) {
+  const run = await prisma.reportRun.findFirst({ where: { id: reportId, reportType: REPORT_TYPE } });
+  if (!run) throw new AppError(404, 'NOT_FOUND', 'Quarterly report run was not found.');
+  if (run.status !== 'COMPLETED' || !run.metadata?.summary) {
+    throw new AppError(409, 'REPORT_NOT_READY', 'The quarterly report is not completed or has no generated data.');
+  }
+  return {
+    filename: run.metadata.csvFilename ?? `brightloop-${run.periodKey}.csv`,
+    csv: buildQuarterCsv({ periodKey: run.periodKey, summary: run.metadata.summary })
   };
 }
 

@@ -7,6 +7,7 @@ import { KANBAN_BUCKETS, defaultReportRange, kanbanBucketWhere, validateReportRa
 
 const ISSUED_STATUSES = ['CONFIRMED', 'SENT', 'PARTIALLY_PAID', 'PAID'];
 const OPEN_STATUSES = ['CONFIRMED', 'SENT', 'PARTIALLY_PAID'];
+const KANBAN_PREVIEW_LIMIT = 10;
 
 export { KANBAN_BUCKETS, defaultReportRange, kanbanBucketWhere, validateReportRange };
 
@@ -103,13 +104,25 @@ export async function getDueKanban({ actor, now = new Date() }) {
   const results = await Promise.all(
     KANBAN_BUCKETS.map(async (bucket) => {
       const where = { AND: [scope, kanbanBucketWhere(bucket.key, today)] };
-      const aggregate = await prisma.invoice.aggregate({ where, _sum: { balance: true }, _count: { _all: true } });
+      const [aggregate, rows] = await prisma.$transaction([
+        prisma.invoice.aggregate({ where, _sum: { balance: true }, _count: { _all: true } }),
+        prisma.invoice.findMany({
+          where,
+          take: KANBAN_PREVIEW_LIMIT,
+          orderBy: { dueDate: 'asc' },
+          include: {
+            customer: { select: { legalName: true } },
+            billingPeriod: { select: { id: true, startsAt: true, endsAt: true, subscriptionId: true } }
+          }
+        })
+      ]);
       return {
         key: bucket.key,
         bucket: bucket.key,
         label: bucket.label,
         count: aggregate._count._all,
-        balance: moneyString(aggregate._sum.balance ?? 0)
+        balance: moneyString(aggregate._sum.balance ?? 0),
+        invoices: rows.map((invoice) => serializeInvoiceSummary(invoice, formatDateOnly(today)))
       };
     })
   );

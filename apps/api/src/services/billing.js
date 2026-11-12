@@ -2,11 +2,11 @@ import { prisma } from '../db/prisma.js';
 import { dec, moneyString, roundMoney, sumMoney } from './money.js';
 import { calculatePricing, selectDiscount } from './pricing.js';
 import {
+  asOfDateFor,
   dateOnlyFromTz,
   dueDateFor,
   duePeriodsFor,
-  formatDateOnly,
-  parseDateOnly
+  formatDateOnly
 } from './billing-calendar.js';
 
 const SUBSCRIPTION_BATCH = 100;
@@ -271,12 +271,12 @@ async function withTransactionRetry(fn, attempts = 3) {
 }
 
 export async function billSubscription(subscriptionId, { asOf = new Date(), now = new Date() } = {}) {
-  const asOfDate = parseDateOnly(asOf instanceof Date ? dateOnlyFromTz(asOf) : asOf);
+  const asOfDate = asOfDateFor(asOf);
   return withTransactionRetry((tx) => billSubscriptionInTransaction(tx, subscriptionId, asOfDate, now));
 }
 
 export async function runDueBilling({ asOf = new Date(), now = new Date(), subscriptionId = null, batchSize = SUBSCRIPTION_BATCH } = {}) {
-  const asOfDate = dateOnlyFromTz(asOf);
+  const asOfDate = asOfDateFor(asOf);
   const result = {
     asOf: formatDateOnly(asOfDate),
     subscriptionsScanned: 0,
@@ -296,6 +296,7 @@ export async function runDueBilling({ asOf = new Date(), now = new Date(), subsc
       result.invoices = one.invoices;
       if (one.skipped) result.skips.push({ subscriptionId, reason: one.skipped });
       if (one.skips) result.skips.push(...one.skips.map((skip) => ({ subscriptionId, ...skip })));
+      if (one.truncated) result.skips.push({ subscriptionId, reason: 'CATCH_UP_TRUNCATED' });
     } catch (error) {
       result.errors.push({ subscriptionId, message: error.message, code: error.code ?? null });
     }

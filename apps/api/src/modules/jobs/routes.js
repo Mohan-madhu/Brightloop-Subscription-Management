@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { requireCsrf } from '../../middleware/auth.js';
 import { requireActor, requireRoles, ROLE } from '../billing/access.js';
 import { bodyNote, dateString } from '../billing/validation.js';
 import { runDueBilling } from '../../services/billing.js';
@@ -18,6 +19,7 @@ const emailRunSchema = z.object({
 
 export const jobsRouter = Router();
 jobsRouter.use(requireActor);
+jobsRouter.use(requireCsrf);
 
 jobsRouter.post('/billing/run', requireRoles(ROLE.ADMIN), async (req, res) => {
   const body = billingRunSchema.parse(req.body ?? {});
@@ -43,7 +45,8 @@ jobsRouter.get('/status', requireRoles(ROLE.ADMIN), async (_req, res) => {
       jobsEnabled: process.env.JOBS_ENABLED === 'true',
       emailDeliveryEnabled: process.env.EMAIL_DELIVERY_ENABLED === 'true',
       billingIntervalMs: Number(process.env.BILLING_JOB_INTERVAL_MS ?? 900000),
-      emailIntervalMs: Number(process.env.EMAIL_JOB_INTERVAL_MS ?? 60000)
+      emailIntervalMs: Number(process.env.EMAIL_JOB_INTERVAL_MS ?? 60000),
+      quarterlyIntervalMs: Number(process.env.QUARTERLY_JOB_INTERVAL_MS ?? 86400000)
     }
   });
 });

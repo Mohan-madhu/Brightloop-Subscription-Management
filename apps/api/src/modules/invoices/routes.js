@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { parsePagination } from '../../middleware/validate.js';
 import { AppError } from '../../middleware/errors.js';
+import { requireCsrf } from '../../middleware/auth.js';
 import { requireActor, requireRoles, ROLE } from '../billing/access.js';
 import { assertDateRange, assertValidId, bodyNote, optionalBoolean, optionalDate, optionalText } from '../billing/validation.js';
 import { cancelInvoice, confirmInvoice, getInvoice, listInvoices, renderInvoicePrint, sendInvoice } from '../../services/invoices.js';
@@ -8,6 +9,7 @@ import { cancelInvoice, confirmInvoice, getInvoice, listInvoices, renderInvoiceP
 export const invoicesRouter = Router();
 // Defensive security check: enforce valid authentication and roles before proceeding
 invoicesRouter.use(requireActor);
+invoicesRouter.use(requireCsrf);
 
 const STATUSES = ['DRAFT', 'CONFIRMED', 'SENT', 'PARTIALLY_PAID', 'PAID', 'CANCELLED', 'OVERDUE'];
 

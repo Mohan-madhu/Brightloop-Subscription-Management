@@ -5,8 +5,12 @@ import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { moneyString } from './money.js';
 
-const SMTP_TIMEOUT_MS = Number(process.env.SMTP_TIMEOUT_MS ?? 20000);
+const SMTP_TIMEOUT_MS = (() => {
+  const value = Number(process.env.SMTP_TIMEOUT_MS ?? 20000);
+  return Number.isFinite(value) && value >= 1000 ? value : 20000;
+})();
 const MAX_ATTEMPTS = 5;
+const STALE_OUTBOX_MS = 30 * 60 * 1000;
 const CLIENT_NAME = 'brightloop.local';
 
 class SmtpSession {
@@ -123,20 +127,34 @@ function expect(response, codes, stage) {
 }
 
 function waitForSocket(socket, event) {
-  if (event === 'secureConnect' ? socket.encrypted : !socket.connecting) return Promise.resolve();
   return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      socket.off(event, onEvent);
+      socket.off('error', onError);
+    };
+    const onEvent = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve();
+    };
+    const onError = (error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
     const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
       socket.destroy();
       reject(new Error('SMTP connection timed out.'));
     }, SMTP_TIMEOUT_MS);
-    socket.once(event, () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    socket.once('error', (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
+    socket.once(event, onEvent);
+    socket.once('error', onError);
   });
 }
 
@@ -242,6 +260,10 @@ export async function sendSmtpMail(messageInput) {
   const from = process.env.SMTP_FROM;
   if (!host || !from) throw smtpError('SMTP_HOST and SMTP_FROM must be configured.', { permanent: true });
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw smtpError('SMTP_PORT is invalid.', { permanent: true });
+  const fromAddress = smtpAddress(from);
+  const recipients = Array.isArray(messageInput.to) ? messageInput.to : [messageInput.to];
+  const recipientAddresses = recipients.map((recipient) => smtpAddress(recipient));
+  if (recipientAddresses.length === 0) throw smtpError('At least one email recipient is required.', { permanent: true });
 
   const secure = port === 465;
   const socket = secure
@@ -273,10 +295,9 @@ export async function sendSmtpMail(messageInput) {
       }
     }
 
-    expect(await session.command(`MAIL FROM:<${smtpAddress(from)}>`), [250], 'MAIL FROM');
-    const recipients = Array.isArray(messageInput.to) ? messageInput.to : [messageInput.to];
-    for (const recipient of recipients) {
-      expect(await session.command(`RCPT TO:<${smtpAddress(recipient)}>`), [250, 251], 'RCPT TO');
+    expect(await session.command(`MAIL FROM:<${fromAddress}>`), [250], 'MAIL FROM');
+    for (const recipient of recipientAddresses) {
+      expect(await session.command(`RCPT TO:<${recipient}>`), [250, 251], 'RCPT TO');
     }
     expect(await session.command('DATA'), [354], 'DATA');
 
@@ -387,13 +408,58 @@ export async function claimOutboxBatch(limit = 10) {
     const ids = rows.map((row) => row.id);
     if (ids.length === 0) return [];
     await tx.emailOutbox.updateMany({ where: { id: { in: ids } }, data: { status: 'PROCESSING', attempts: { increment: 1 } } });
+    await tx.messageLog.createMany({
+      data: ids.map((id) => ({
+        outboxId: id,
+        channel: 'EMAIL',
+        status: 'CLAIMED',
+        metadata: { claimedAt: new Date().toISOString() }
+      }))
+    });
     return tx.emailOutbox.findMany({ where: { id: { in: ids } }, orderBy: { createdAt: 'asc' } });
   });
 }
 
-export async function recoverStaleOutbox() {
-  const result = await prisma.emailOutbox.updateMany({ where: { status: 'PROCESSING' }, data: { status: 'PENDING' } });
-  return result.count;
+export function outboxRecoveryStatus({ attempts, lastStatus }) {
+  if (lastStatus === 'FAILED') return 'FAILED';
+  if (lastStatus === 'SKIPPED') return 'SKIPPED';
+  if (!lastStatus || lastStatus === 'SENDING' || lastStatus === 'ACCEPTED' || lastStatus === 'UNCERTAIN') return 'UNCERTAIN';
+  if (Number(attempts) >= MAX_ATTEMPTS) return 'FAILED';
+  return 'PENDING';
+}
+
+export async function recoverStaleOutbox({ now = new Date(), staleAfterMs = STALE_OUTBOX_MS } = {}) {
+  const rows = await prisma.emailOutbox.findMany({
+    where: { status: 'PROCESSING' },
+    select: { id: true, attempts: true, createdAt: true }
+  });
+  let recovered = 0;
+  for (const row of rows) {
+    const last = await prisma.messageLog.findFirst({
+      where: { outboxId: row.id },
+      orderBy: { createdAt: 'desc' },
+      select: { status: true, createdAt: true }
+    });
+    const at = last?.createdAt ?? row.createdAt;
+    if (now.getTime() - at.getTime() < staleAfterMs) continue;
+    const status = outboxRecoveryStatus({ attempts: row.attempts, lastStatus: last?.status ?? null });
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.emailOutbox.updateMany({ where: { id: row.id, status: 'PROCESSING' }, data: { status } });
+      if (result.count === 1) {
+        await tx.messageLog.create({
+          data: {
+            outboxId: row.id,
+            channel: 'EMAIL',
+            status: status === 'PENDING' ? 'RECOVERED' : status,
+            metadata: { note: 'Recovered a stale PROCESSING outbox row at startup.' }
+          }
+        });
+      }
+      return result.count;
+    });
+    recovered += updated;
+  }
+  return recovered;
 }
 
 export async function processEmailOutbox({ limit = 10, logger = console } = {}) {
@@ -404,7 +470,6 @@ export async function processEmailOutbox({ limit = 10, logger = console } = {}) 
   const result = { enabled: true, processed: 0, accepted: 0, retried: 0, failed: 0, uncertain: 0, skipped: 0 };
   for (const outbox of rows) {
     const body = outbox.body ?? {};
-    const rendered = renderTemplate({ template: body.template, data: body.data ?? {} });
     let accepted = false;
     try {
       if (body.template === 'invoice' && body.data?.invoiceId) {
@@ -427,6 +492,10 @@ export async function processEmailOutbox({ limit = 10, logger = console } = {}) 
         }
       }
 
+      const rendered = renderTemplate({ template: body.template, data: body.data ?? {} });
+      await prisma.messageLog.create({
+        data: { outboxId: outbox.id, channel: 'EMAIL', status: 'SENDING', metadata: { template: body.template } }
+      });
       await sendSmtpMail({
         to: outbox.to.split(',').map((value) => value.trim()).filter(Boolean),
         subject: outbox.subject,
@@ -498,4 +567,17 @@ export async function queueInvoiceEmail(invoice, client = prisma) {
     },
     client
   );
+}
+
+export async function findPendingInvoiceEmail(invoiceId, client = prisma) {
+  if (!invoiceId) return null;
+  const rows = await client.$queryRaw`
+    SELECT id FROM "EmailOutbox"
+    WHERE status IN ('PENDING', 'PROCESSING')
+      AND body->>'template' = 'invoice'
+      AND body->'data'->>'invoiceId' = ${String(invoiceId)}
+    ORDER BY "createdAt" DESC
+    LIMIT 1
+  `;
+  return rows[0]?.id ?? null;
 }

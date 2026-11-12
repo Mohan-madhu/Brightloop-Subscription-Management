@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { parsePagination } from '../../middleware/validate.js';
 import { AppError } from '../../middleware/errors.js';
+import { requireCsrf } from '../../middleware/auth.js';
 import { requireActor, requireRoles, ROLE } from '../billing/access.js';
 import { assertDateRange, assertValidId, optionalDate, optionalText } from '../billing/validation.js';
 import { listPayments, recordManualPayment, MANUAL_PAYMENT_METHODS } from '../../services/payments.js';
@@ -21,6 +22,7 @@ const verifySchema = z.object({
 
 export const invoicePaymentsRouter = Router();
 invoicePaymentsRouter.use(requireActor);
+invoicePaymentsRouter.use(requireCsrf);
 
 // POST /invoices/:id/payments: Record manual payment, recalculate balance, update status
 invoicePaymentsRouter.post('/:id/payments', requireRoles(ROLE.ADMIN, ROLE.FINANCE), async (req, res) => {
@@ -47,6 +49,7 @@ invoicePaymentsRouter.post('/:id/razorpay/order', async (req, res) => {
 
 export const paymentsRouter = Router();
 paymentsRouter.use(requireActor);
+paymentsRouter.use(requireCsrf);
 
 // GET /payments: Scoped payment history listing
 paymentsRouter.get('/', async (req, res) => {

@@ -1,5 +1,5 @@
 import { Decimal, moneyString } from './money.js';
-import { formatDateOnly, todayInBillingZone } from './billing-calendar.js';
+import { dateOnlyFromTz, formatDateOnly, todayInBillingZone } from './billing-calendar.js';
 
 export function isDecimalLike(value) {
   return value instanceof Decimal || Boolean(value && typeof value.toDecimalPlaces === 'function' && typeof value.toFixed === 'function');
@@ -18,6 +18,12 @@ export function serialiseValue(value) {
 
 export function dateOnly(value) {
   return value ? formatDateOnly(value) : null;
+}
+
+export function timestampDate(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : formatDateOnly(dateOnlyFromTz(date));
 }
 
 export function isOverdue(invoice, today = todayInBillingZone()) {
@@ -73,7 +79,7 @@ export function serializeInvoiceSummary(invoice, today = todayInBillingZone()) {
     customerId: invoice.customerId,
     customerName: invoice.customerSnapshot?.legalName ?? invoice.customer?.legalName ?? null,
     customerEmail: invoice.customerSnapshot?.billingEmail ?? invoice.customer?.billingEmail ?? null,
-    issueDate: dateOnly(invoice.createdAt),
+    issueDate: timestampDate(invoice.createdAt),
     status: invoice.status,
     overdue: isOverdue(invoice, today),
     currency: invoice.currency,

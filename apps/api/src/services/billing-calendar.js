@@ -171,3 +171,9 @@ export function previousQuarterKey(now = new Date()) {
 export function todayInBillingZone(now = new Date()) {
   return formatDateOnly(dateOnlyFromTz(now));
 }
+
+export function asOfDateFor(value, now = new Date()) {
+  if (value === null || value === undefined || value === '') return dateOnlyFromTz(now);
+  if (value instanceof Date) return dateOnlyFromTz(value);
+  return parseDateOnly(value);
+}

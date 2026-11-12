@@ -4,7 +4,7 @@ import { moneyString } from './money.js';
 import { invoiceScopeWhere } from '../modules/billing/access.js';
 import { nextBillingDayStartUtc, parseDateOnly, startOfBillingDayUtc, todayInBillingZone } from './billing-calendar.js';
 import { serializeInvoice, serializeInvoiceSummary } from './serializers.js';
-import { queueInvoiceEmail } from './email.js';
+import { findPendingInvoiceEmail, queueInvoiceEmail } from './email.js';
 
 const INVOICE_INCLUDE = {
   customer: { select: { id: true, legalName: true, billingEmail: true, billingAddress: true } },
@@ -129,10 +129,11 @@ export async function sendInvoice({ invoiceId, actor }) {
     if (['DRAFT', 'CANCELLED'].includes(locked.status)) {
       throw new AppError(409, 'INVALID_STATUS', `Invoice ${locked.number} cannot be emailed while ${locked.status}.`);
     }
-    const outbox = await queueInvoiceEmail(locked, tx);
+    const pendingOutboxId = await findPendingInvoiceEmail(locked.id, tx);
+    const outbox = pendingOutboxId ? { id: pendingOutboxId } : await queueInvoiceEmail(locked, tx);
     if (!outbox) throw new AppError(409, 'NO_BILLING_EMAIL', 'The customer has no billing email address.');
     await tx.invoiceStatusLog.create({
-      data: { invoiceId: locked.id, status: locked.status, note: `Invoice email queued by ${actor?.userId ?? 'staff'}.` }
+      data: { invoiceId: locked.id, status: locked.status, note: pendingOutboxId ? `Existing queued invoice email reused by ${actor?.userId ?? 'staff'}.` : `Invoice email queued by ${actor?.userId ?? 'staff'}.` }
     });
     return { invoice: locked, outboxId: outbox.id };
   });

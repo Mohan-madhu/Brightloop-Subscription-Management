@@ -2,10 +2,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { parsePagination } from '../../middleware/validate.js';
 import { AppError } from '../../middleware/errors.js';
+import { requireCsrf } from '../../middleware/auth.js';
 import { requireActor, requireRoles, ROLE } from '../billing/access.js';
-import { assertDateRange, optionalDate, optionalText } from '../billing/validation.js';
+import { assertDateRange, assertValidId, optionalDate, optionalText } from '../billing/validation.js';
 import { getDashboard, getDueKanban, getDueKanbanDetail, KANBAN_BUCKETS } from '../../services/reports.js';
-import { listQuarterlyRuns, runQuarterlyReport } from '../../services/quarterly-reports.js';
+import { getQuarterlyReportCsv, listQuarterlyRuns, runQuarterlyReport } from '../../services/quarterly-reports.js';
 
 const quarterSchema = z.object({
   periodKey: z.string().regex(/^\d{4}-Q[1-4]$/, 'periodKey must use YYYY-Qn.').optional()
@@ -13,6 +14,7 @@ const quarterSchema = z.object({
 
 export const reportsRouter = Router();
 reportsRouter.use(requireActor);
+reportsRouter.use(requireCsrf);
 
 function rangeFromQuery(req) {
   const from = optionalDate(req.query, 'from');
@@ -55,6 +57,15 @@ reportsRouter.get('/quarterly', requireRoles(ROLE.ADMIN, ROLE.FINANCE), async (r
   const { page, pageSize, skip } = parsePagination(req.query);
   const result = await listQuarterlyRuns({ page, pageSize, skip });
   return res.json(result);
+});
+
+reportsRouter.get('/quarterly/:id/download', requireRoles(ROLE.ADMIN, ROLE.FINANCE), async (req, res) => {
+  const reportId = assertValidId(req.params.id, 'reportId');
+  const report = await getQuarterlyReportCsv({ reportId });
+  const filename = report.filename.replace(/[^\w.\-]+/g, '_');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  return res.send(report.csv);
 });
 
 reportsRouter.post('/quarterly/run', requireRoles(ROLE.ADMIN, ROLE.FINANCE), async (req, res) => {

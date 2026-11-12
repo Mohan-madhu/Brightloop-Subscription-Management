@@ -67,6 +67,9 @@ export async function createRazorpayOrder({ invoiceId, actor }) {
       notes: { invoiceId: invoice.id, invoiceNumber: invoice.number, createdBy: actor?.userId ?? 'staff' }
     }
   });
+  if (!order?.id) {
+    throw new AppError(502, 'PAYMENT_PROVIDER_MISMATCH', 'Razorpay returned an order without an id.');
+  }
   if (order?.amount !== expectedPaise || order?.currency !== 'INR') {
     throw new AppError(502, 'PAYMENT_PROVIDER_MISMATCH', 'Razorpay returned an order with an unexpected amount or currency.');
   }
@@ -125,6 +128,9 @@ async function applyCapturedPayment(tx, { order, entity, source }) {
     throw new AppError(409, 'PAYMENT_CURRENCY_MISMATCH', 'Payment currency does not match the invoice currency.');
   }
   const amount = roundMoney(dec(entity.amount).div(100));
+  if (amount.lte(0)) {
+    throw new AppError(409, 'PAYMENT_AMOUNT_MISMATCH', 'Captured payment amount must be greater than zero.');
+  }
   if (!amount.eq(roundMoney(order.amount))) {
     throw new AppError(409, 'PAYMENT_AMOUNT_MISMATCH', 'Payment amount does not match the provider order amount.');
   }
@@ -136,6 +142,9 @@ async function applyCapturedPayment(tx, { order, entity, source }) {
   const existing = await tx.payment.findUnique({ where: { providerPaymentId: String(entity.id) } });
   if (existing?.status === 'CONFIRMED') {
     return { applied: false, duplicate: true, paymentId: existing.id, invoiceId: invoice.id };
+  }
+  if (!['CONFIRMED', 'SENT', 'PARTIALLY_PAID'].includes(invoice.status)) {
+    throw new AppError(409, 'INVALID_STATUS', `A payment cannot be applied to an invoice in ${invoice.status} status.`);
   }
 
   const balance = roundMoney(invoice.balance);
