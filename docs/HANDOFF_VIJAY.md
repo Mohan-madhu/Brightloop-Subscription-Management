@@ -2,93 +2,93 @@
 
 ## Second Pass Status
 
-Second pass completed and verified on branch `vijay/backend`.
-Unit test suite: **37 passing, 0 failing** across 7 test suites, covering all 10 meaningful failure scenarios requested.
-Exact verification commit: `f36225e` (author: `vijaym-143 <msvijayvijay3@gmail.com>`).
+- Branch: `vijay/second-pass`
+- Code verification commit: `4259736` (`fix(api): harden billing, email outbox, reports, and payment verification`)
+- Integration merges included: `0971caf` (`origin/integration/mvp` at `ba8a593`) and `0fa8005` (`vijay/backend` at `bafc523`).
+- Unit tests: **216 passing, 0 failing**.
+- TypeScript typecheck: **passing**.
+- Prisma schema validation: **passing** with a dummy `DATABASE_URL`.
+- Database-backed integration tests: **NOT RUN** (no isolated database).
+- Live SMTP and Razorpay tests: **NOT RUN** (no credentials; no unsolicited email or real money).
 
-### Real Code Fixes Implemented
+## Real Code Fixes in This Pass
 
-1. **Prisma query argument fix (`apps/api/src/services/razorpay.js`)**:
-   Fixed `findUnique` query argument from non-existent compound `provider_providerEventId` to the actual schema-unique field `providerEventId` in webhook deduplication lookups (lines 218 and 229).
-2. **Kolkata calendar anchor on resume (`apps/api/src/services/billing.js`)**:
-   Enforced strict Asia/Kolkata date boundary extraction via `dateOnlyFromTz` on `resumeStartFor` to guarantee no drift when resumes occur near UTC midnight.
-3. **Access boundary defensive fallback (`apps/api/src/modules/billing/access.js`)**:
-   Added client injection and fail-closed error handling in `customerIdFor` and scope functions so database disconnections or unlinked customer accounts cleanly deny access (`{ id: '__no_customer_record__' }`) instead of unhandled runtime errors.
-4. **Response fields matching Najid's frontend models (`apps/api/src/services/serializers.js`, `reports.js`, `quarterly-reports.js`)**:
-   - `serializeInvoiceSummary`: added `customerEmail` and `issueDate`.
-   - `serializeInvoice`: added `customerAddress` and `history` status logs.
-   - `serializePayment`: added `reference` (aliased to `providerPaymentId ?? id`).
-   - `getDashboard`: added `invoiced`, `collected`, `outstanding`, `overdueCount`, and `currency: 'INR'` matching `FinanceDashboardView`.
-   - `getDueKanban`: added `key` matching `KanbanBucketView`.
-   - `serializeReportRun`: added `period` and `downloadAvailable` matching `QuarterlyReportView`.
+1. **Billing `asOf` normalization** (`services/billing-calendar.js`, `services/billing.js`):
+   Added `asOfDateFor` so Date and `YYYY-MM-DD` inputs both resolve to an Asia/Kolkata billing date. `runDueBilling` now also reports `CATCH_UP_TRUNCATED` for a single-subscription run.
+2. **CSRF protection** (`modules/{invoices,payments,reports,jobs}/routes.js`):
+   Applied the existing `requireCsrf` middleware after actor resolution. Safe `GET`/`HEAD`/`OPTIONS` requests continue without a CSRF token.
+3. **Email outbox recovery and idempotency** (`services/email.js`, `services/invoices.js`):
+   - Claims now write `CLAIMED` logs; delivery writes a `SENDING` log before SMTP.
+   - Stale `PROCESSING` rows are recovered only after the 30-minute stale window and classified as `PENDING`, `FAILED`, or `UNCERTAIN` instead of blindly resetting every row.
+   - `attempts === 5` rows are not left permanently stuck.
+   - Template rendering moved inside the error boundary.
+   - SMTP configuration and recipients are validated before opening a connection; TLS handshakes are always awaited.
+   - `sendInvoice` reuses an existing pending invoice email instead of queueing a duplicate.
+4. **Kanban response contract** (`services/reports.js`):
+   Each bucket now includes up to 10 `invoices` summaries (bounded preview) plus the full bucket `count` and `balance`, matching `apps/web/features/najid/types.ts`.
+5. **Quarterly report download** (`services/quarterly-reports.js`, `modules/reports/routes.js`):
+   Added `GET /api/v1/reports/quarterly/:id/download` returning CSV. `downloadAvailable` is true only for completed runs with stored summary data. Runs with `RUNNING` and null `startedAt` can be reclaimed.
+6. **Invoice issue dates** (`services/serializers.js`):
+   `issueDate` now uses the Asia/Kolkata calendar date instead of the UTC date.
+7. **Razorpay verification hardening** (`services/razorpay.js`):
+   Reject provider orders without an `id`, captured amounts at or below zero, and payments applied to invoices in a non-payable status.
 
-## Tested Flows & Verified Failure Cases
+## Tested Flows
 
-Run:
 ```powershell
 npm test -w @brightloop/api
+# 216 tests, 216 pass, 0 fail
+
+npm run typecheck
+# pass
+
+$env:DATABASE_URL='postgresql://user:pass@localhost:5432/brightloop_validate'
+npm run prisma:validate -w @brightloop/api
+# schema valid
 ```
-Result: **208 passing, 0 failing** across 24 test suites.
 
-## Extended Simulation & Contract Test Suites (5,000+ Lines Added)
+New focused tests in `apps/api/test/second-pass-fixes.test.js` cover:
+- `asOfDateFor` with Date and date-string inputs, including IST midnight boundaries and malformed dates.
+- IST conversion for invoice `issueDate`.
+- Email recovery classification for `CLAIMED`, `SENDING`, `ACCEPTED`, null, `FAILED`, and exhausted attempts.
+- Quarterly `downloadAvailable` only when completed with summary data.
 
-- **OpenAPI 3.1 & Zod Schemas**: Full contract coverage in `apps/api/src/types/openapi-schemas.js`, `billing-contracts.js`, `billing-state-machine.js`, and `metered-billing-contracts.js`.
-- **GST & SAC Compliance Matrix**: 100 enterprise scenarios covering intra-state (CGST 9% + SGST 9%), inter-state (IGST 18%), export with LUT, and GSTIN Modulo-36 checksums (`apps/api/test/compliance-gst-audit.test.js`, `gst-hsn-catalog-verification.test.js`, `gstin-checksum.test.js`).
-- **High-Concurrency Race Simulation**: Atomic discount reservation under 50 simultaneous claims, parallel payment allocations preventing negative balances, draft confirmation idempotency, and period uniqueness (`apps/api/test/concurrency-race-conditions.test.js`).
-- **Proration & Lifecycle Amendments**: Mid-cycle plan upgrades, downgrades, leap-year 29-day month handling, and contract extensions (`apps/api/test/proration-calculation.test.js`, `subscription-amendments.test.js`).
-- **Double-Entry Accounting Journal**: 50 balanced journal vouchers validating standard GAAP/Ind-AS 115 debit/credit parity to the exact paisa (`apps/api/test/accounting-journal-audit.test.js`).
-- **Dunning Lifecycle & Webhook Reconciliation**: Automated overdue aging tiers, 24-hour reminder rate-limiting, and 2% + 18% GST gateway fee settlement verification (`apps/api/test/dunning-lifecycle.test.js`, `webhook-reconciliation.test.js`).
-- **E-Invoicing IRN & SEZ Exemptions**: Statutory 64-character SHA-256 IRN hash generation and Section 51 2% PSU GST TDS deduction rules (`apps/api/test/e-invoicing-irn.test.js`, `tax-exemption-rules.test.js`).
+Existing tests continue to cover billing idempotency, concurrent billing, payment allocation, webhook deduplication/signature rejection, calendar anchoring, discount caps, quarterly retry, and customer isolation. Most of these are deterministic simulations; they do not prove real database behavior.
 
-Specific failure cases verified in `apps/api/test/failure-cases.test.js`:
-- **Billing idempotency**: Running billing twice produces only one recurring invoice per subscription/period; subsequent scans return 0 periods.
-- **Concurrent billing safety**: Advisory lock serialization and database-backed `BillingPeriod` uniqueness (`subscriptionId_startsAt_endsAt`) safely reject concurrent duplicate runs with `PERIOD_ALREADY_EXISTS`.
-- **Partial and final payment allocation**: Partial payment transitions balance and marks `PARTIALLY_PAID`; exact remaining balance payment closes balance to `0.00` and marks `PAID`. Overpayment and payments against zero balance throw validation errors.
-- **Webhook deduplication**: Duplicate webhook event payloads with the same `providerEventId` return `DUPLICATE_EVENT`. Replays under different event IDs for an already confirmed `providerPaymentId` return `{ applied: false, duplicate: true }` without altering balance.
-- **Bad signature rejection**: Invalid HMAC-SHA256 signatures, tampered payloads, or incorrect secrets fail verification upfront and reject without touching database state.
-- **Month-end and leap-year calendar anchoring**: January 31 correctly clamps February to 28 (or 29) and restores anchor to 31 for March and subsequent months. Leap-year February 29 preserves the 29th day anchor across non-leap years (Feb 28) and restores to Feb 29 in the next leap year.
-- **Ineligible subscription filtering**: `PAUSED`, `CLOSED`, and `EXPIRED` subscriptions do not generate invoices. Subscriptions with `expiryDate` cap periods at expiry and produce zero post-expiry periods. Resumed subscriptions start the next period at the resume date.
-- **Discount cap race protection**: Discount with `usageLimit` is reserved via `FOR UPDATE` count of active usages. Concurrent drafts past the limit are excluded; cancelling a draft releases usage and restores eligibility.
-- **Quarterly report retry idempotency**: A completed report run returns `ALREADY_COMPLETED`; an in-progress run returns `IN_PROGRESS`. Retries never duplicate the quarterly report run or email attachment.
-- **Customer record isolation**: Invoices and payments are strictly scoped to `req.auth.customerId`. Requests across customer boundaries resolve to non-matching records and return 404.
+## NOT RUN / Environment Blockers
 
-## Honest Status: Unverified / Marked NOT RUN
-
-In accordance with safety guidelines:
-- **NOT RUN: Live shared PostgreSQL mutation suite**: The configured remote database (`187.127.189.231:5432`) is a shared environment. Destructive testing or test-data pollution against the shared DB was deliberately omitted.
-- **NOT RUN: Live SMTP transmission**: `EMAIL_DELIVERY_ENABLED=false` was preserved. Live Gmail delivery was not triggered to prevent unsolicited emails.
-- **NOT RUN: Real-money Razorpay transactions**: Verified with simulated test orders and cryptographic webhook HMAC signatures; no live money was moved.
+- **Database-backed checks are NOT RUN.** `apps/api/.env` exists locally but points at a shared remote PostgreSQL instance. It is ignored by Git and was never committed. No isolated test database is available; local PostgreSQL 17 is running but credentials are unknown, and Docker is unavailable.
+- **Live SMTP is NOT RUN.** `EMAIL_DELIVERY_ENABLED=false` and `JOBS_ENABLED=false` remain the safe defaults. No unsolicited emails were sent.
+- **Live Razorpay is NOT RUN.** No real order or payment was created; no money moved.
+- **PDF generation is not implemented.** Invoice output remains printable HTML (`renderInvoicePrint`); the frontend labels it “Print / download”.
+- **Web lint is NOT RUN successfully.** `npm run lint` fails while loading the local ESLint React plugin because `node_modules` is missing `es-abstract/2024/AddEntriesFromIterable`. This is a local tooling/dependency issue, not a lint result. Typecheck passes.
 
 ## Schema Changes Reported to Mohan
 
-The following schema refinements are needed for future iterations and should be coordinated by Mohan:
-1. `WebhookEvent`: The Prisma model defines `providerEventId String @unique`. If event IDs should be unique per provider rather than globally unique, update to `@@unique([provider, providerEventId])`.
-2. `SubscriptionLine.variantId`: Currently defined as `String?` without a Prisma `@relation` to `ProductVariant`. Needs a foreign key constraint.
-3. `TaxApplicability`: The schema lacks nullable unique indexes for global tax applicability.
-4. `DiscountTarget`: Currently targets `product`, `variant`, or `plan`; lacks target types for whole-quotation or whole-subscription discounts.
+Do not change these independently; coordinate with Mohan:
 
-## Required Integration Wiring (Reminder for Integration Owner)
+1. `PlanProduct`: `@@id([planId, productId, isAddon])` omits `variantId`, so a plan cannot hold two variants of the same product.
+2. `TaxApplicability`: `@@unique([taxId, productId, planId])` does not prevent duplicate global rows because PostgreSQL treats nulls as distinct.
+3. `DiscountTarget`: no explicit target type for whole-quotation/global discounts.
+4. `EmailOutbox`: no `claimedAt`, `lastAttemptAt`, `nextAttemptAt`, or `lastError`; recovery currently uses `MessageLog` records as a workaround.
+5. `WebhookEvent.providerEventId` is globally unique rather than unique per provider.
+6. `ProviderOrder`: no status/consumed flag, no unique idempotency key, and no `Payment.providerOrderId` relation. Repeated create-order requests can create multiple provider orders.
+7. `BillingPeriod.endsAt` is exclusive by convention only; the schema does not encode the half-open interval.
+8. `InvoiceStatus.OVERDUE` is unused; overdue remains derived from due date and balance.
 
-Mount in `apps/api/src/app.js`:
-- `app.use('/api/v1/webhooks', razorpayWebhookRouter)` (MUST be placed before `express.json()`).
-- `app.use(express.json({ limit: '100kb' }))`.
-- Protected routers mounted behind session/token guard:
-  - `app.use('/api/v1/invoices', requireAuth, invoicesRouter)`
-  - `app.use('/api/v1/invoices', requireAuth, invoicePaymentsRouter)`
-  - `app.use('/api/v1/payments', requireAuth, paymentsRouter)`
-  - `app.use('/api/v1/reports', requireAuth, reportsRouter)`
-  - `app.use('/api/v1/jobs', requireAuth, jobsRouter)`
-Scheduler in `apps/api/src/server.js`:
-- `startScheduler()` / `stopScheduler()` from `src/jobs/scheduler.js`.
+## Integration Wiring (already present)
+
+`apps/api/src/app.js` mounts the Razorpay webhook before `express.json()`, then mounts `invoicesRouter`, `invoicePaymentsRouter`, `paymentsRouter`, `reportsRouter`, and `jobsRouter` behind `requireAuth`. `apps/api/src/server.js` starts and stops the scheduler. Billing routers now also enforce CSRF on mutations.
 
 ## Key Files
 
-- `apps/api/src/services/billing-calendar.js`, `pricing.js`, `money.js` — Shared calculations and calendar anchoring.
-- `apps/api/src/services/billing.js` — Recurring billing and transactional locks.
-- `apps/api/src/services/invoices.js`, `payments.js`, `payment-rules.js` — Invoices and payment lifecycle.
-- `apps/api/src/services/razorpay.js`, `razorpay-signature.js` — Razorpay orders, verifications, and signed webhooks.
-- `apps/api/src/services/email.js` — Transactional outbox, MIME generation, and template rendering.
-- `apps/api/src/services/reports.js`, `reporting-rules.js`, `quarterly-reports.js` — Reporting, Kanban, and quarterly runs.
-- `apps/api/src/modules/billing/access.js` — Actor normalization and record scoping.
-- `apps/api/src/modules/{invoices,payments,webhooks,reports,jobs}` — Exported routers.
-- `apps/api/test/*.test.js` — 37 unit and failure scenario tests.
+- `apps/api/src/services/billing-calendar.js`, `billing.js`, `pricing.js`, `money.js`
+- `apps/api/src/services/invoices.js`, `payments.js`, `payment-rules.js`
+- `apps/api/src/services/razorpay.js`, `razorpay-signature.js`
+- `apps/api/src/services/email.js`
+- `apps/api/src/services/reports.js`, `reporting-rules.js`, `quarterly-reports.js`
+- `apps/api/src/services/serializers.js`
+- `apps/api/src/modules/{invoices,payments,webhooks,reports,jobs}`
+- `apps/api/src/modules/billing/access.js`, `validation.js`
+- `apps/api/prisma/schema.prisma` (read-only for this pass)
+- `apps/api/test/second-pass-fixes.test.js` and existing API tests
